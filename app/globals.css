@@ -2,10 +2,21 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #0E76BD;   /* the only accent color */
-  --font-quicksand: var(--font-quicksand-sans), sans-serif;
+  --color-primary: #0E76BD;
 }
 
 body {
   font-family: var(--font-quicksand-sans), sans-serif;
+}
+
+/* Gentle continuous sway for the photo collage — like a hanging frame */
+@keyframes hang-sway {
+  0%, 100% { transform: translateY(0) rotate(var(--sway-rotate, 0deg)); }
+  50%      { transform: translateY(-8px) rotate(var(--sway-rotate, 0deg)); }
+}
+
+/* Light-to-bright color sweep for the card's top accent bar */
+@keyframes card-sweep {
+  0%   { background-position: -120% 0; }
+  100% { background-position: 220% 0; }
 }

@@ -1,18 +1,19 @@
 import Image from "next/image";
 import { facultyMembers } from "@/lib/faculty-data";
-import FacultyCard from "./FacultyCard";
 import FeedbackForm from "./FeedbackForm";
-
-
+import FacultyDirectory from "./FacultyDirectory";
+import Reveal from "@/components/ui/Reveal";
+import Container from "@/components/ui/Container";
+import ScrollToTopButton from "@/components/ui/ScrollToTopButton";
 
 export default function ContactPage() {
   const bachelorFaculty = facultyMembers.filter((f) => f.level === "bachelor");
   const masterFaculty = facultyMembers.filter((f) => f.level === "master");
 
   return (
-<main className="bg-white text-slate-800">
-          {/* ---------------- HERO ---------------- */}
-      <section className="relative overflow-hidden bg-primary px-5 py-16 text-white sm:px-8 sm:py-20 lg:py-24">
+    <main className="overflow-x-hidden bg-white text-slate-800">
+      {/* ---------------- HERO ---------------- */}
+      <section className="relative overflow-hidden bg-primary py-16 text-white sm:py-20 lg:py-24">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.07]"
           style={{
@@ -20,8 +21,8 @@ export default function ContactPage() {
               "repeating-linear-gradient(45deg, transparent 0 26px, rgba(255,255,255,.6) 26px 27px), repeating-linear-gradient(-45deg, transparent 0 26px, rgba(255,255,255,.6) 26px 27px)",
           }}
         />
-        <div className="relative mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.25fr_0.9fr] lg:items-end">
-          <div>
+        <Container className="relative grid gap-10 lg:grid-cols-[1.25fr_0.9fr] lg:items-end">
+          <Reveal>
             <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/80">
               Faculty Directory · Contact Persons
             </span>
@@ -55,23 +56,25 @@ export default function ContactPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </Reveal>
 
-          <div className="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm sm:p-7">
-            <span className="text-4xl leading-none text-white/80">&ldquo;</span>
-            <p className="mt-1 text-[1.05rem] italic leading-relaxed text-white/90">
-              Knowledge finds its true worth only when it is shared — reach
-              out, and someone here will guide you home.
-            </p>
-            <p className="mt-4 text-sm text-white/80">— Campus Administration</p>
-          </div>
-        </div>
+          <Reveal delay={150}>
+            <div className="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm sm:p-7">
+              <span className="text-4xl leading-none text-white/80">&ldquo;</span>
+              <p className="mt-1 text-[1.05rem] italic leading-relaxed text-white/90">
+                Knowledge finds its true worth only when it is shared — reach
+                out, and someone here will guide you home.
+              </p>
+              <p className="mt-4 text-sm text-white/80">— Campus Administration</p>
+            </div>
+          </Reveal>
+        </Container>
       </section>
 
       {/* ---------------- INTRO / WHAT IS A CONTACT PERSON ---------------- */}
-      <section className="px-5 py-16 sm:px-8 sm:py-20">
-        <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2 lg:gap-16">
-          <div>
+      <section className="py-16 sm:py-20">
+        <Container className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+          <Reveal>
             <span className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
               Who are Contact Persons
             </span>
@@ -106,66 +109,85 @@ export default function ContactPage() {
                     <path d="M22 10v6M2 10l10-5 10 5-10 5zM6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5" />
                   ),
                 },
-              ].map((item) => (
-                <div key={item.title} className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      {item.icon}
-                    </svg>
+              ].map((item, i) => (
+                <Reveal key={item.title} delay={i * 100} y={16}>
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        {item.icon}
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-primary">{item.title}</h4>
+                      <p className="mt-0.5 text-sm text-slate-500">{item.desc}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-primary">{item.title}</h4>
-                    <p className="mt-0.5 text-sm text-slate-500">{item.desc}</p>
-                  </div>
-                </div>
+                </Reveal>
               ))}
             </div>
-          </div>
+          </Reveal>
 
           {/* Photo collage — replace src values with your own images in /public/images */}
-          <div className="relative h-[340px] sm:h-[400px] lg:h-[440px]">
-            <div className="absolute left-0 top-0 z-20 h-[62%] w-[58%] overflow-hidden rounded-xl border-4 border-white shadow-xl">
-              <Image
-                src="/images/campus/faculty-meeting.jpg"
-                alt="Faculty meeting"
-                fill
-                sizes="(max-width: 768px) 60vw, 400px"
-                className="object-cover"
-              />
+          <Reveal delay={200} y={32}>
+            <div className="relative h-[300px] sm:h-[400px] lg:h-[440px]">
+              <div
+                className="absolute left-0 top-0 z-20 h-[62%] w-[58%] overflow-hidden rounded-xl border-4 border-white shadow-xl"
+                style={{ animation: "hang-sway 6s ease-in-out infinite" }}
+              >
+                <Image
+                  src="/images/campus/faculty-meeting.jpg"
+                  alt="Faculty meeting"
+                  fill
+                  sizes="(max-width: 768px) 60vw, 400px"
+                  className="object-cover"
+                />
+              </div>
+              <div
+                className="absolute bottom-0 right-0 z-30 h-[46%] w-[48%] overflow-hidden rounded-xl border-4 border-white shadow-xl"
+                style={{ animation: "hang-sway 5s ease-in-out infinite", animationDelay: "0.6s" }}
+              >
+                <Image
+                  src="/images/campus/library.jpg"
+                  alt="Campus library"
+                  fill
+                  sizes="(max-width: 768px) 50vw, 350px"
+                  className="object-cover"
+                />
+              </div>
+              <div
+                className="absolute right-[6%] top-[16%] z-10 h-[34%] w-[34%] overflow-hidden rounded-xl border-4 border-white shadow-xl"
+                style={
+                  {
+                    animation: "hang-sway 5.5s ease-in-out infinite",
+                    animationDelay: "1.1s",
+                    "--sway-rotate": "3deg",
+                  } as React.CSSProperties
+                }
+              >
+                <Image
+                  src="/images/campus/lecture-hall.jpg"
+                  alt="Lecture hall"
+                  fill
+                  sizes="(max-width: 768px) 40vw, 250px"
+                  className="object-cover"
+                />
+              </div>
+              <div className="absolute bottom-[10%] left-[6%] z-40 flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-primary text-center shadow-xl sm:h-24 sm:w-24">
+                <span className="px-2 text-[11px] font-semibold leading-tight text-white">
+                  Est.
+                  <br />
+                  1987
+                </span>
+              </div>
             </div>
-            <div className="absolute bottom-0 right-0 z-30 h-[46%] w-[48%] overflow-hidden rounded-xl border-4 border-white shadow-xl">
-              <Image
-                src="/images/campus/library.jpg"
-                alt="Campus library"
-                fill
-                sizes="(max-width: 768px) 50vw, 350px"
-                className="object-cover"
-              />
-            </div>
-            <div className="absolute right-[6%] top-[16%] z-10 h-[34%] w-[34%] rotate-3 overflow-hidden rounded-xl border-4 border-white shadow-xl">
-              <Image
-                src="/images/campus/lecture-hall.jpg"
-                alt="Lecture hall"
-                fill
-                sizes="(max-width: 768px) 40vw, 250px"
-                className="object-cover"
-              />
-            </div>
-            <div className="absolute bottom-[10%] left-[6%] z-40 flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-primary text-center shadow-xl sm:h-24 sm:w-24">
-              <span className="px-2 text-[11px] font-semibold leading-tight text-white">
-                Est.
-                <br />
-                1987
-              </span>
-            </div>
-          </div>
-        </div>
+          </Reveal>
+        </Container>
       </section>
 
       {/* ---------------- FACULTY ADMINISTRATION ---------------- */}
-      <section className="bg-primary/5 px-5 py-16 sm:px-8 sm:py-20">
-        <div className="mx-auto max-w-6xl">
-          <div className="mx-auto mb-12 max-w-xl text-center">
+      <section className="bg-primary/5 py-16 sm:py-20">
+        <Container>
+          <Reveal className="mx-auto mb-12 max-w-xl text-center" y={16}>
             <span className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
               Faculty Administration
             </span>
@@ -175,63 +197,39 @@ export default function ContactPage() {
             <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-[0.95rem]">
               Primary points of contact for faculty-specific student
               details, academic records, and administrative inquiries.
+              Tap a card to see full details.
             </p>
-          </div>
+          </Reveal>
 
-          {/* Bachelor's level */}
-          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">
-                BACHELOR&rsquo;S LEVEL
-              </span>
-              <h3 className="text-lg font-bold text-primary sm:text-xl">
-                Undergraduate Faculty
-              </h3>
-            </div>
-            <span className="text-sm text-slate-500">{bachelorFaculty.length} departments</span>
-          </div>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {bachelorFaculty.map((member) => (
-              <FacultyCard key={member.id} member={member} />
-            ))}
-          </div>
-
-          {/* Master's level */}
-          <div className="mb-4 mt-14 flex flex-wrap items-baseline justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">
-                MASTER&rsquo;S LEVEL
-              </span>
-              <h3 className="text-lg font-bold text-primary sm:text-xl">
-                Graduate Faculty
-              </h3>
-            </div>
-            <span className="text-sm text-slate-500">{masterFaculty.length} departments</span>
-          </div>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {masterFaculty.map((member) => (
-              <FacultyCard key={member.id} member={member} />
-            ))}
-          </div>
+          <FacultyDirectory
+            bachelorFaculty={bachelorFaculty}
+            masterFaculty={masterFaculty}
+          />
 
           {/* Info banner */}
-          <div className="mt-14 rounded-2xl bg-primary p-6 text-white sm:p-8">
-            <p className="text-sm leading-relaxed sm:text-[0.95rem]">
-              The Heads of Department listed above are the{" "}
-              <strong className="font-semibold text-white/90">primary points of contact</strong>{" "}
-              for faculty-specific student details, academic records, and
-              administrative inquiries within their respective departments.
-            </p>
-          </div>
-        </div>
+          <Reveal delay={100}>
+            <div className="mt-14 rounded-2xl bg-primary p-6 text-white sm:p-8">
+              <p className="text-sm leading-relaxed sm:text-[0.95rem]">
+                The Heads of Department listed above are the{" "}
+                <strong className="font-semibold text-white/90">primary points of contact</strong>{" "}
+                for faculty-specific student details, academic records, and
+                administrative inquiries within their respective departments.
+              </p>
+            </div>
+          </Reveal>
+        </Container>
       </section>
 
       {/* ---------------- FEEDBACK ---------------- */}
-      <section className="px-5 py-16 sm:px-8 sm:py-20">
-        <div className="mx-auto max-w-5xl">
-          <FeedbackForm />
-        </div>
+      <section className="py-16 sm:py-20">
+        <Container className="max-w-5xl">
+          <Reveal y={32}>
+            <FeedbackForm />
+          </Reveal>
+        </Container>
       </section>
+
+      <ScrollToTopButton />
     </main>
   );
 }
