@@ -7,12 +7,10 @@ export interface FacultyMember {
   department: string;
   email: string;
   phone: string;
-  /**
-   * Path to the photo, relative to /public.
-   * Drop your image into /public/images/faculty/ and update this path
-   * — e.g. "/images/faculty/basanta-kandel.jpg".
-   * Leave as the placeholder to fall back to an initials avatar.
-   */
   photo?: string;
   level: AcademicLevel;
+  // shown in the detail popup only — all optional
+  bio?: string;
+  officeHours?: string;
+  education?: string;
 }

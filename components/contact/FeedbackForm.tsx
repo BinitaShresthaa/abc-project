@@ -80,15 +80,18 @@ export default function FeedbackForm() {
           />
         </div>
         <button
-          type="submit"
-          className="w-full rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 hover:bg-primary/90"
-        >
-          Submit Feedback
-        </button>
+  type="submit"
+  className="w-full rounded-full px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
+  style={{ backgroundColor: "#0E9F6E" }}
+  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#0C8A5F")}
+  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#0E9F6E")}
+>
+  Submit Feedback
+</button>
         <p className="mt-3 text-xs text-slate-500">
           {submitted
             ? "Thank you — your feedback has been received."
-            : "We typically respond within 2 business days."}
+            : ""}
         </p>
       </form>
     </div>
