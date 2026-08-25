@@ -5,28 +5,18 @@ import type { Alumni } from "@/lib/mock-alumni";
 import Avatar from "../Avatar";
 import { adYearToBs } from "@/lib/nepali-date";
 import { facultyList } from "@/lib/faculty-data";
+import IdentityCell from "../IdentityCell";
 
 
 export const alumniColumns: TableColumn<Alumni>[] = [
-  {
-    key: "regNo",
-    header: "Registration No.",
-    render: (r) => <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{r.regNo}</span>,
-    exportValue: (r) => r.regNo,
-    searchable: true,
-  },
-  {
-    key: "photo",
-    header: "Photo",
-    render: (r) => <Avatar name={r.name} photo={r.photo} />,
-  },
-  {
-    key: "name",
-    header: "Alumni Name",
-    render: (r) => <span className="font-medium text-slate-700 dark:text-slate-200">{r.name}</span>,
-    exportValue: (r) => r.name,
-    searchable: true,
-  },
+ {
+  key: "identity",
+  header: "Name/Reg.No",
+  render: (r) => <IdentityCell name={r.name} regNo={r.regNo} photo={r.photo} />,
+  exportValue: (r) => `${r.name} (${r.regNo})`,   // CSV/PDF/Word still get both values, just formatted together
+  searchable: true,
+  searchValue: (r) => `${r.name} ${r.regNo}`,      // search still matches on either name or reg no
+},
   {
     key: "email",
     header: "Email",
