@@ -1,28 +1,38 @@
 'use client';
 
 interface AuthCardProps {
-  /** Which side the blue panel sits on. Pass a fixed value for a static
-   *  page (login), or a value derived from state for a page where it
-   *  should slide (register). */
   panelSide: 'left' | 'right';
-  /** Content for the blue branding panel (use <BrandPanel />). */
   branding: React.ReactNode;
-  /** Content for the white form panel. */
   children: React.ReactNode;
-  /** Extra classes applied to the outer <main>, e.g. a font className. */
   fontClassName?: string;
+  /** Set true for content-heavy forms (e.g. the multi-step registration)
+   *  that need more vertical room and a scrollable form panel. Leave this
+   *  false (default) for simple pages like sign-in — that keeps the card
+   *  at the original 560px height so the curve matches the reference
+   *  design exactly instead of stretching taller. */
+  tall?: boolean;
 }
 
-export default function AuthCard({ panelSide, branding, children, fontClassName = '' }: AuthCardProps) {
+export default function AuthCard({
+  panelSide,
+  branding,
+  children,
+  fontClassName = '',
+  tall = false,
+}: AuthCardProps) {
   const panelOnLeft = panelSide === 'left';
+  const heightClass = tall ? 'min-h-[560px] md:min-h-[640px]' : 'min-h-[560px]';
+  const formPanelClass = tall
+    ? 'flex-col justify-center overflow-y-auto px-16 py-10'
+    : 'flex-col justify-center px-16';
 
   return (
     <main
       className={`${fontClassName} min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_20%_15%,#F2F8FC_0%,#E7F1F8_55%,#DCEBF5_100%)] p-6`}
     >
-      <div className="relative w-full max-w-[920px] min-h-[560px] rounded-[32px] shadow-[0_30px_60px_rgba(11,90,147,0.18)] overflow-hidden bg-white">
+      <div className={`relative w-full max-w-[920px] ${heightClass} rounded-[32px] shadow-[0_30px_60px_rgba(11,90,147,0.18)] overflow-hidden bg-white`}>
 
-        {/* DESKTOP — blue panel slides left/right, form panel slides opposite */}
+        {/* DESKTOP */}
         <div
           className={`hidden md:flex absolute top-0 h-full w-[48%] flex-col items-center justify-center text-center text-white px-10
                      bg-[linear-gradient(150deg,#0B5A93_0%,#0E76BD_55%,#3E97D6_100%)]
@@ -36,14 +46,14 @@ export default function AuthCard({ panelSide, branding, children, fontClassName 
         </div>
 
         <div
-          className={`hidden md:flex absolute top-0 h-full w-[52%] flex-col justify-center px-16
+          className={`hidden md:flex absolute top-0 h-full w-[52%] ${formPanelClass}
                      transition-all duration-700 ease-in-out
                      ${panelOnLeft ? 'left-[48%]' : 'left-0'}`}
         >
           {children}
         </div>
 
-        {/* MOBILE — simple stacked layout, no side-swap animation */}
+        {/* MOBILE */}
         <div className="flex md:hidden flex-col">
           <div
             className="relative flex flex-col items-center justify-center text-center text-white px-10 py-12
