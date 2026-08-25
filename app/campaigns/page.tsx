@@ -12,7 +12,7 @@ import type { StoryCampaign } from "../components/CampaignStories";
 
 import CampaignReveal from "../components/ui/CampaignReveal";
 import CampaignContainer from "../components/ui/CampaignContainer";
-import CampaignScrollToTopButton from "../components/ui/CampaignScrollToTopButton";
+import ScrollToTopButton from "@/components/ui/ScrollToTopButton";
 
 import {
   ArrowDown,
@@ -1099,7 +1099,7 @@ export default function CampaignsPage() {
           SCROLL TO TOP
       =================================================== */}
 
-      <CampaignScrollToTopButton />
+      <ScrollToTopButton />
 
     </main>
 
