@@ -1,5 +1,30 @@
 import type { FacultyMember } from "./types";
 
+// ---------------------------------------------------------------
+// Canonical list of faculty/program names — this is what every
+// filter dropdown and "Add" form (Student, Alumni, etc.) should
+// import faculty options from. Add a new program here once, and
+// it becomes available everywhere automatically.
+// ---------------------------------------------------------------
+export const facultyList: string[] = [
+  // ---------- Bachelor's level ----------
+  "BA English",
+  "BBA",
+  "BA",
+  "BICTE",
+  "BA Nepali",
+  "B.Ed Math",
+  "B.Ed Nepali",
+  "B.Ed Science",
+
+  // ---------- Master's level ----------
+  "M.A",
+  "M.B.S",
+  "M.Ed English",
+  "M.Ed Nepali",
+  "M.Ed EPM",
+];
+
 // Edit this list freely — add, remove, or reorder entries.
 // To change a photo: drop the image file into /public/images/faculty/
 // and point `photo` at it, e.g. "/images/faculty/basanta-kandel.jpg".
