@@ -1,13 +1,62 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #0E76BD;   /* the only accent color */
-  --font-quicksand: var(--font-quicksand-sans), sans-serif;
+  --color-primary: #0E76BD;
+}
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  * {
+    transition-property: background-color, border-color, color;
+    transition-timing-function: ease;
+    transition-duration: 200ms;
+  }
 }
 
 body {
   font-family: var(--font-quicksand-sans), sans-serif;
 }
-html {
-  scroll-behavior: smooth;
+
+.styled-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.styled-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.styled-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.styled-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.styled-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+.dark .styled-scrollbar {
+  scrollbar-color: #475569 transparent;
+}
+
+.dark .styled-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #475569;
+}
+
+.dark .styled-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b;
+}
+
+@keyframes hang-sway {
+  0%, 100% { transform: translateY(0) rotate(var(--sway-rotate, 0deg)); }
+  50%      { transform: translateY(-8px) rotate(var(--sway-rotate, 0deg)); }
+}
+
+@keyframes card-sweep {
+  0%   { background-position: -120% 0; }
+  100% { background-position: 220% 0; }
 }

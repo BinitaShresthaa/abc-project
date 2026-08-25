@@ -1,0 +1,306 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { TableColumn, TableFilter } from "./types";
+import YearScrollSelect from "./YearScrollSelect";
+import { downloadCsv, downloadExcel, downloadPdf, downloadWord, printRows } from "./export-utils";
+
+type ExportFormat = "csv" | "excel" | "pdf" | "word";
+
+export default function DataTable<T extends Record<string, unknown>>({
+  title,
+  data,
+  columns,
+  filters = [],
+  rowIdKey,
+}: {
+  title: string;
+  data: T[];
+  columns: TableColumn<T>[];
+  filters?: TableFilter<T>[];
+  rowIdKey: keyof T;
+}) {
+  const getRowId = (row: T) => String(row[rowIdKey]);
+
+  const [search, setSearch] = useState("");
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [printMenuOpen, setPrintMenuOpen] = useState(false);
+  const [exportFormat, setExportFormat] = useState<ExportFormat>("csv");
+
+  const filterOptions = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    for (const f of filters) {
+      map[f.key] = f.options ?? Array.from(new Set(data.map(f.getValue))).sort();
+    }
+    return map;
+  }, [filters, data]);
+
+  const searchableColumns = columns.filter((c) => c.searchable);
+
+  const filteredData = useMemo(() => {
+    return data.filter((row) => {
+      for (const f of filters) {
+        const active = filterValues[f.key];
+        if (active && f.getValue(row) !== active) return false;
+      }
+      if (search.trim()) {
+        const q = search.trim().toLowerCase();
+        const hit = searchableColumns.some((c) =>
+          (c.searchValue?.(row) ?? c.exportValue?.(row) ?? "").toLowerCase().includes(q)
+        );
+        if (!hit) return false;
+      }
+      return true;
+    });
+  }, [data, filters, filterValues, search, searchableColumns]);
+
+  const filteredIds = filteredData.map(getRowId);
+  const allFilteredSelected = filteredIds.length > 0 && filteredIds.every((id) => selected.has(id));
+  const someFilteredSelected = filteredIds.some((id) => selected.has(id)) && !allFilteredSelected;
+  const selectedCount = filteredIds.filter((id) => selected.has(id)).length;
+
+  const headerCheckboxRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (headerCheckboxRef.current) headerCheckboxRef.current.indeterminate = someFilteredSelected;
+  }, [someFilteredSelected]);
+
+  function toggleAll() {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allFilteredSelected) filteredIds.forEach((id) => next.delete(id));
+      else filteredIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+
+  function toggleRow(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  const exportableColumns = columns.filter((c) => c.exportValue);
+
+  function getExportSet(mode: "all" | "selected") {
+    return mode === "selected" ? filteredData.filter((r) => selected.has(getRowId(r))) : filteredData;
+  }
+
+  async function handleExport(mode: "all" | "selected") {
+    const rows = getExportSet(mode);
+    const headers = exportableColumns.map((c) => c.header);
+    const body = rows.map((r) => exportableColumns.map((c) => c.exportValue!(r)));
+    const filename = `${title.toLowerCase().replace(/\s+/g, "-")}-${mode}`;
+
+    if (exportFormat === "csv") downloadCsv(filename, headers, body);
+    else if (exportFormat === "excel") await downloadExcel(filename, headers, body);
+    else if (exportFormat === "pdf") await downloadPdf(title, headers, body);
+    else if (exportFormat === "word") await downloadWord(title, headers, body);
+
+    setExportMenuOpen(false);
+  }
+
+  function handlePrint(mode: "all" | "selected") {
+    const rows = getExportSet(mode);
+    const headers = exportableColumns.map((c) => c.header);
+    const body = rows.map((r) => exportableColumns.map((c) => c.exportValue!(r)));
+    printRows(title, headers, body);
+    setPrintMenuOpen(false);
+  }
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      {/* toolbar */}
+      <div className="flex flex-col gap-3 border-b border-slate-100 p-4 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-1 flex-wrap items-center gap-2">
+          <div className="flex min-w-[200px] flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-slate-400">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search..."
+              className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200"
+            />
+          </div>
+
+          {filters.map((f) =>
+  f.isYearFilter ? (
+    <div key={f.key} className="w-48">
+      <YearScrollSelect
+        value={filterValues[f.key] ?? ""}
+        onChange={(year) => setFilterValues((prev) => ({ ...prev, [f.key]: year }))}
+        placeholder={`All ${f.label}`}
+      />
+    </div>
+  ) : (
+    <select
+      key={f.key}
+      value={filterValues[f.key] ?? ""}
+      onChange={(e) => setFilterValues((prev) => ({ ...prev, [f.key]: e.target.value }))}
+      className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+    >
+      <option value="">All {f.label}</option>
+      {filterOptions[f.key]?.map((opt) => (
+        <option key={opt} value={opt}>{opt}</option>
+      ))}
+    </select>
+  )
+)}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* export */}
+          <div className="relative">
+            <button
+              onClick={() => { setExportMenuOpen((v) => !v); setPrintMenuOpen(false); }}
+              className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+              </svg>
+              Export
+            </button>
+            {exportMenuOpen && (
+              <div className="absolute right-0 top-full z-10 mt-2 w-56 rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Format</div>
+                <div className="mb-3 grid grid-cols-4 gap-1.5">
+                  {([
+                    { value: "csv", label: "CSV" },
+                    { value: "excel", label: "Excel" },
+                    { value: "pdf", label: "PDF" },
+                    { value: "word", label: "Word" },
+                  ] as { value: ExportFormat; label: string }[]).map((f) => (
+                    <button
+                      key={f.value}
+                      onClick={() => setExportFormat(f.value)}
+                      className={`rounded-md py-1.5 text-xs font-semibold transition-colors ${
+                        exportFormat === f.value
+                          ? "bg-primary text-white"
+                          : "bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300"
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="border-t border-slate-100 pt-2 dark:border-slate-700">
+                  <button
+                    onClick={() => handleExport("all")}
+                    className="block w-full rounded-md px-2 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700"
+                  >
+                    All ({filteredData.length})
+                  </button>
+                  <button
+                    onClick={() => handleExport("selected")}
+                    disabled={selectedCount === 0}
+                    className="block w-full rounded-md px-2 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-300 dark:hover:bg-slate-700"
+                  >
+                    Selected ({selectedCount})
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* print */}
+          <div className="relative">
+            <button
+              onClick={() => { setPrintMenuOpen((v) => !v); setExportMenuOpen(false); }}
+              className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" />
+              </svg>
+              Print
+            </button>
+            {printMenuOpen && (
+              <div className="absolute right-0 top-full z-10 mt-2 w-44 rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+                <button onClick={() => handlePrint("all")} className="block w-full px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700">
+                  All ({filteredData.length})
+                </button>
+                <button
+                  onClick={() => handlePrint("selected")}
+                  disabled={selectedCount === 0}
+                  className="block w-full px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-300 dark:hover:bg-slate-700"
+                >
+                  Selected ({selectedCount})
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* table */}
+      <div className="styled-scrollbar overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-slate-100 dark:border-slate-800">
+              <th className="w-10 p-4">
+                <input
+                  ref={headerCheckboxRef}
+                  type="checkbox"
+                  checked={allFilteredSelected}
+                  onChange={toggleAll}
+                  className="h-4 w-4 rounded border-slate-300 accent-primary"
+                />
+              </th>
+              {columns.map((col) => (
+                <th key={col.key} className="whitespace-nowrap p-4 text-left font-semibold text-slate-500 dark:text-slate-400">
+                  {col.header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.map((row) => {
+              const id = getRowId(row);
+              const isSelected = selected.has(id);
+              return (
+                <tr
+                  key={id}
+                  className={`border-b border-slate-50 last:border-0 dark:border-slate-800/60 ${
+                    isSelected ? "bg-primary/5" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                  }`}
+                >
+                  <td className="p-4">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleRow(id)}
+                      className="h-4 w-4 rounded border-slate-300 accent-primary"
+                    />
+                  </td>
+                  {columns.map((col) => (
+                    <td key={col.key} className="whitespace-nowrap p-4 text-slate-600 dark:text-slate-300">
+                      {col.render(row)}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+            {filteredData.length === 0 && (
+              <tr>
+                <td colSpan={columns.length + 1} className="p-10 text-center text-sm text-slate-400">
+                  No results match your search or filters.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex items-center justify-between border-t border-slate-100 p-4 text-xs text-slate-400 dark:border-slate-800">
+        <span>{filteredData.length} of {data.length} rows</span>
+        {selectedCount > 0 && <span>{selectedCount} selected</span>}
+      </div>
+    </div>
+  );
+}
