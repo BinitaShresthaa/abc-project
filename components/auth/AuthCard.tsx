@@ -5,32 +5,16 @@ interface AuthCardProps {
   branding: React.ReactNode;
   children: React.ReactNode;
   fontClassName?: string;
-  /** Set true for content-heavy forms (e.g. the multi-step registration)
-   *  that need more vertical room and a scrollable form panel. Leave this
-   *  false (default) for simple pages like sign-in — that keeps the card
-   *  at the original 560px height so the curve matches the reference
-   *  design exactly instead of stretching taller. */
-  tall?: boolean;
 }
 
-export default function AuthCard({
-  panelSide,
-  branding,
-  children,
-  fontClassName = '',
-  tall = false,
-}: AuthCardProps) {
+export default function AuthCard({ panelSide, branding, children, fontClassName = '' }: AuthCardProps) {
   const panelOnLeft = panelSide === 'left';
-  const heightClass = tall ? 'min-h-[560px] md:min-h-[640px]' : 'min-h-[560px]';
-  const formPanelClass = tall
-    ? 'flex-col justify-center overflow-y-auto px-16 py-10'
-    : 'flex-col justify-center px-16';
 
   return (
     <main
       className={`${fontClassName} min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_20%_15%,#F2F8FC_0%,#E7F1F8_55%,#DCEBF5_100%)] p-6`}
     >
-      <div className={`relative w-full max-w-[920px] ${heightClass} rounded-[32px] shadow-[0_30px_60px_rgba(11,90,147,0.18)] overflow-hidden bg-white`}>
+      <div className="relative w-full max-w-[920px] min-h-[560px] rounded-[32px] shadow-[0_30px_60px_rgba(11,90,147,0.18)] overflow-hidden bg-white">
 
         {/* DESKTOP */}
         <div
@@ -46,7 +30,7 @@ export default function AuthCard({
         </div>
 
         <div
-          className={`hidden md:flex absolute top-0 h-full w-[52%] ${formPanelClass}
+          className={`hidden md:flex absolute top-0 h-full w-[52%] flex-col justify-center px-16
                      transition-all duration-700 ease-in-out
                      ${panelOnLeft ? 'left-[48%]' : 'left-0'}`}
         >

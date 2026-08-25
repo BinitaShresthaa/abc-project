@@ -17,7 +17,6 @@ import {
   emailIcon,
   lockIcon,
   userIcon,
-  calendarIcon,
   phoneIcon,
   graduationCapIcon,
   idCardIcon,
@@ -27,7 +26,7 @@ type TextFieldKey =
   | 'fullName' | 'dobYear' | 'dobMonth' | 'dobDay' | 'gender'
   | 'contactNo' | 'email'
   | 'password' | 'confirmPassword'
-  | 'faculty' | 'batch' | 'registrationNo';
+  | 'faculty' | 'batch' | 'passoutYear' | 'registrationNo';
 
 interface SelectOption {
   value: string;
@@ -40,10 +39,11 @@ interface SelectGroup {
 
 type StepFieldConfig =
   | { kind: 'input'; key: TextFieldKey; type: string; placeholder: string; icon: React.ReactNode; isPassword?: boolean }
-  | { kind: 'select'; key: TextFieldKey; placeholder: string; icon: React.ReactNode; options?: SelectOption[]; groups?: SelectGroup[] }
+  | { kind: 'select'; key: TextFieldKey; placeholder: string; icon?: React.ReactNode; options?: SelectOption[]; groups?: SelectGroup[] }
   | { kind: 'gender'; key: TextFieldKey }
   | { kind: 'nepali-date' }
-  | { kind: 'file'; key: 'file'; accept?: string; placeholder?: string };
+  | { kind: 'file'; key: 'file'; accept?: string; placeholder?: string }
+  | { kind: 'row'; label?: string; items: StepFieldConfig[] };
 
 // Faculty options, grouped by level, pulled straight from lib/faculty-data.ts.
 // A couple of department strings there have typos ("BA Englsih") — fix at
@@ -124,7 +124,14 @@ const steps: { title: string; panelHeading: string; panelDescription: string; fi
     panelDescription: 'Provide an image that contains your Aadikavi registration number.',
     fields: [
       { kind: 'select', key: 'faculty', placeholder: 'Select faculty', icon: graduationCapIcon, groups: facultyGroups },
-      { kind: 'select', key: 'batch', placeholder: 'Select batch', icon: calendarIcon, options: batchOptions },
+      {
+        kind: 'row',
+        label: 'Batch & Passout Year (B.S.)',
+        items: [
+          { kind: 'select', key: 'batch', placeholder: 'Batch', options: batchOptions },
+          { kind: 'select', key: 'passoutYear', placeholder: 'Passout year', options: batchOptions },
+        ],
+      },
       { kind: 'input', key: 'registrationNo', type: 'text', placeholder: 'Registration number', icon: idCardIcon },
       { kind: 'file', key: 'file', placeholder: 'Upload ID / registration proof', accept: '.pdf,.jpg,.jpeg,.png' },
     ],
@@ -137,7 +144,7 @@ export default function AlmuniRegisterPage() {
     fullName: '', dobYear: '', dobMonth: '', dobDay: '', gender: '',
     contactNo: '', email: '',
     password: '', confirmPassword: '',
-    faculty: '', batch: '', registrationNo: '',
+    faculty: '', batch: '', passoutYear: '', registrationNo: '',
   });
   const [file, setFile] = useState<File | null>(null);
 
@@ -148,15 +155,17 @@ export default function AlmuniRegisterPage() {
   const updateField = (key: TextFieldKey, value: string) =>
     setFormData((p) => ({ ...p, [key]: value }));
 
-  const isStepValid = (idx: number) =>
-    steps[idx].fields.every((f) => {
-      if (f.kind === 'file') return file !== null;
-      if (f.kind === 'nepali-date') return !!(formData.dobYear && formData.dobMonth && formData.dobDay);
-      const val = formData[f.key];
-      if (!val.trim()) return false;
-      if (f.key === 'confirmPassword') return val === formData.password;
-      return true;
-    });
+  const isFieldValid = (f: StepFieldConfig): boolean => {
+    if (f.kind === 'file') return file !== null;
+    if (f.kind === 'nepali-date') return !!(formData.dobYear && formData.dobMonth && formData.dobDay);
+    if (f.kind === 'row') return f.items.every(isFieldValid);
+    const val = formData[f.key];
+    if (!val.trim()) return false;
+    if (f.key === 'confirmPassword') return val === formData.password;
+    return true;
+  };
+
+  const isStepValid = (idx: number) => steps[idx].fields.every(isFieldValid);
 
   const handleNext = () => {
     if (!isStepValid(step)) return;
@@ -172,7 +181,6 @@ export default function AlmuniRegisterPage() {
   return (
     <AuthCard
       panelSide={panelSide}
-      tall
       fontClassName={quicksand.className}
       branding={
         <BrandPanel
@@ -181,98 +189,18 @@ export default function AlmuniRegisterPage() {
         />
       }
     >
-      <h2 className="text-[26px] font-bold text-[#241B3A] mb-2">Create Account</h2>
-      <p className="text-[12.5px] text-[#8B87A3] mb-6">
+      <h2 className="text-[26px] font-bold text-[#241B3A] mb-1.5">Create Account</h2>
+      <p className="text-[12.5px] text-[#8B87A3] mb-5">
         Step {step + 1} of {steps.length} — {currentStep.title}
       </p>
 
       <StepDots total={steps.length} current={step} />
 
-      <div className="mb-2 space-y-4">
-        {currentStep.fields.map((field) => {
-          if (field.kind === 'input') {
-            const mismatch =
-              field.key === 'confirmPassword' &&
-              formData.confirmPassword.length > 0 &&
-              formData.confirmPassword !== formData.password;
-            return (
-              <div key={field.key}>
-                <FormField
-                  icon={field.icon}
-                  type={field.type}
-                  isPassword={field.isPassword}
-                  placeholder={field.placeholder}
-                  value={formData[field.key]}
-                  onChange={(v) => updateField(field.key, v)}
-                />
-                {mismatch && (
-                  <p className="text-[11.5px] text-red-500 mt-2 ml-2">Passwords do not match</p>
-                )}
-              </div>
-            );
-          }
-          if (field.kind === 'select') {
-            return (
-              <SelectField
-                key={field.key}
-                icon={field.icon}
-                placeholder={field.placeholder}
-                value={formData[field.key]}
-                onChange={(v) => updateField(field.key, v)}
-                options={field.options}
-                groups={field.groups}
-              />
-            );
-          }
-          if (field.kind === 'gender') {
-            return (
-              <GenderToggle
-                key={field.key}
-                value={formData.gender}
-                onChange={(v) => updateField('gender', v)}
-              />
-            );
-          }
-          if (field.kind === 'nepali-date') {
-            return (
-              <div key="nepali-date">
-                <p className="text-[12.5px] text-[#8B87A3] mb-2 ml-1">Date of Birth (B.S.)</p>
-                <div className="grid grid-cols-3 gap-2">
-                  <SelectField
-                    placeholder="Year"
-                    value={formData.dobYear}
-                    onChange={(v) => updateField('dobYear', v)}
-                    options={dobYearOptions}
-                  />
-                  <SelectField
-                    placeholder="Month"
-                    value={formData.dobMonth}
-                    onChange={(v) => updateField('dobMonth', v)}
-                    options={nepaliMonths}
-                  />
-                  <SelectField
-                    placeholder="Day"
-                    value={formData.dobDay}
-                    onChange={(v) => updateField('dobDay', v)}
-                    options={nepaliDays}
-                  />
-                </div>
-              </div>
-            );
-          }
-          return (
-            <FileUploadField
-              key={field.key}
-              value={file}
-              onChange={setFile}
-              accept={field.accept}
-              placeholder={field.placeholder}
-            />
-          );
-        })}
+      <div className="mb-2 space-y-3">
+        {currentStep.fields.map((field) => renderField(field))}
       </div>
 
-      <div className="flex items-center gap-3 mt-6">
+      <div className="flex items-center gap-3 mt-5">
         {step > 0 && <SecondaryButton onClick={handleBack}>Back</SecondaryButton>}
         <SubmitButton onClick={handleNext} disabled={!isStepValid(step)} fullWidth={false}>
           {isLastStep ? 'Sign Up' : 'Next'}
@@ -280,7 +208,7 @@ export default function AlmuniRegisterPage() {
       </div>
 
       {step === 0 && (
-        <p className="text-center text-[12.5px] text-[#8B87A3] mt-6">
+        <p className="text-center text-[12.5px] text-[#8B87A3] mt-5">
           Already have an account?{' '}
           <Link href="/almuni/almuni-login" className="text-[#0E76BD] font-semibold hover:underline">
             Sign In
@@ -289,4 +217,101 @@ export default function AlmuniRegisterPage() {
       )}
     </AuthCard>
   );
+
+  function renderField(field: StepFieldConfig): React.ReactNode {
+    if (field.kind === 'row') {
+      return (
+        <div key={field.items.map((i) => ('key' in i ? i.key : i.kind)).join('-')}>
+          {field.label && <p className="text-[12.5px] text-[#8B87A3] mb-2 ml-1">{field.label}</p>}
+          <div className="grid grid-cols-2 gap-2">
+            {field.items.map((item) => renderField(item))}
+          </div>
+        </div>
+      );
+    }
+
+    if (field.kind === 'input') {
+      const mismatch =
+        field.key === 'confirmPassword' &&
+        formData.confirmPassword.length > 0 &&
+        formData.confirmPassword !== formData.password;
+      return (
+        <div key={field.key}>
+          <FormField
+            icon={field.icon}
+            type={field.type}
+            isPassword={field.isPassword}
+            placeholder={field.placeholder}
+            value={formData[field.key]}
+            onChange={(v) => updateField(field.key, v)}
+          />
+          {mismatch && (
+            <p className="text-[11.5px] text-red-500 mt-2 ml-2">Passwords do not match</p>
+          )}
+        </div>
+      );
+    }
+
+    if (field.kind === 'select') {
+      return (
+        <SelectField
+          key={field.key}
+          icon={field.icon}
+          placeholder={field.placeholder}
+          value={formData[field.key]}
+          onChange={(v) => updateField(field.key, v)}
+          options={field.options}
+          groups={field.groups}
+        />
+      );
+    }
+
+    if (field.kind === 'gender') {
+      return (
+        <GenderToggle
+          key={field.key}
+          value={formData.gender}
+          onChange={(v) => updateField('gender', v)}
+        />
+      );
+    }
+
+    if (field.kind === 'nepali-date') {
+      return (
+        <div key="nepali-date">
+          <p className="text-[12.5px] text-[#8B87A3] mb-2 ml-1">Date of Birth (B.S.)</p>
+          <div className="grid grid-cols-3 gap-2">
+            <SelectField
+              placeholder="Year"
+              value={formData.dobYear}
+              onChange={(v) => updateField('dobYear', v)}
+              options={dobYearOptions}
+            />
+            <SelectField
+              placeholder="Month"
+              value={formData.dobMonth}
+              onChange={(v) => updateField('dobMonth', v)}
+              options={nepaliMonths}
+            />
+            <SelectField
+              placeholder="Day"
+              value={formData.dobDay}
+              onChange={(v) => updateField('dobDay', v)}
+              options={nepaliDays}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <FileUploadField
+        key={field.key}
+        value={file}
+        onChange={setFile}
+        accept={field.accept}
+        placeholder={field.placeholder}
+      />
+    );
+  }
 }
