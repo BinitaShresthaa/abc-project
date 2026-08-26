@@ -1,8 +1,7 @@
 import { getAllowedFeatureKeys } from "./permissions";
 
 export type NavIconName =
-  | "grid" | "users" | "userCheck" | "book" | "wallet" | "megaphone" | "settings" | "shield";
-
+  | "grid" | "users" | "userCheck" | "book" | "wallet" | "megaphone" | "settings" | "shield" | "bell";
 export interface NavItem {
   key: string;
   label: string;
@@ -36,14 +35,17 @@ export const navStructure: NavItem[] = [
       { key: "passout-student-list", label: "Passout List", href: "/dashboard/student/left", icon: "users" },
     ],
   },
-  {
-    key: "campaign", label: "Campaign", icon: "megaphone",
-    children: [
-      { key: "campaign-add", label: "Add Campaign", href: "/dashboard/campaign/new", icon: "megaphone" },
-      { key: "campaign-list", label: "Campaign List", href: "/dashboard/campaign", icon: "megaphone" },
-      { key: "campaign-past", label: "Campaign (Past)", href: "/dashboard/campaign/past", icon: "megaphone" },
-    ],
-  },
+ {
+  key: "campaign", label: "Campaign", icon: "megaphone",
+  children: [
+    { key: "campaign-add", label: "Add Campaign", href: "/dashboard/campaign/new", icon: "megaphone" },
+    { key: "campaign-list", label: "Campaign List", href: "/dashboard/campaign", icon: "megaphone" },
+    { key: "campaign-highlight", label: "Campaign Highlight", href: "/dashboard/campaign/highlight", icon: "megaphone" },
+        { key: "campaign-donation", label: "Campaign Donation", href: "/dashboard/campaign/Donation", icon: "megaphone" },
+
+    { key: "campaign-past", label: "Campaign (Past)", href: "/dashboard/campaign/past", icon: "megaphone" },
+  ],
+},
   {
     key: "alumni", label: "Alumni", icon: "book",
     children: [
@@ -52,6 +54,7 @@ export const navStructure: NavItem[] = [
       { key: "alumni-verification", label: "Alumni Verification", href: "/dashboard/alumni/verification", icon: "book" },
     ],
   },
+  { key: "notification", label: "Notification", href: "/dashboard/Notification", icon: "bell" },
   { key: "settings", label: "Settings", href: "/dashboard/settings", icon: "settings" },
 ];
 

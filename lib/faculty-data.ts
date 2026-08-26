@@ -125,3 +125,14 @@ export const facultyMembers: FacultyMember[] = [
     level: "master",
   },
 ];
+// ---------------------------------------------------------------
+// Append to the bottom of the existing lib/faculty-data.ts file.
+// Determines whether a faculty/program is Bachelor's or Master's level,
+// used to decide which Year/Semester range applies to a student.
+// ---------------------------------------------------------------
+
+export const masterFacultyNames: string[] = ["M.A", "M.B.S", "M.Ed English", "M.Ed Nepali", "M.Ed EPM"];
+
+export function getFacultyLevel(faculty: string): "bachelor" | "master" {
+  return masterFacultyNames.includes(faculty) ? "master" : "bachelor";
+}

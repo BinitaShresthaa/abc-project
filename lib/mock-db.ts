@@ -14,8 +14,8 @@ export const mockPermissions: Record<string, Set<string>> = {
     "campus-admin", "campus-admin-add", "campus-admin-list",
     "contact", "contact-add", "contact-list",
     "student", "student-add", "student-list", "student-left","passout-student-list",
-    "campaign", "campaign-add", "campaign-list", "campaign-past",
-    "alumni", "alumni-list", "alumni-story", "alumni-verification",
+    "campaign", "campaign-add", "campaign-list","campaign-highlight","campaign-donation", "campaign-past",
+    "alumni", "alumni-list", "alumni-story", "alumni-verification","notification",
     "settings",
   ]),
   "role-hod": new Set([
