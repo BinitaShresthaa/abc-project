@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { TableColumn, TableFilter } from "./types";
 import YearScrollSelect from "./YearScrollSelect";
+
 import { downloadCsv, downloadExcel, downloadPdf, downloadWord, printRows } from "./export-utils";
 
 type ExportFormat = "csv" | "excel" | "pdf" | "word";
+const PAGE_SIZE = 10;
 
 export default function DataTable<T extends Record<string, unknown>>({
   title,
@@ -28,6 +30,7 @@ export default function DataTable<T extends Record<string, unknown>>({
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [printMenuOpen, setPrintMenuOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>("csv");
+  const [page, setPage] = useState(1);
 
   const filterOptions = useMemo(() => {
     const map: Record<string, string[]> = {};
@@ -56,21 +59,34 @@ export default function DataTable<T extends Record<string, unknown>>({
     });
   }, [data, filters, filterValues, search, searchableColumns]);
 
-  const filteredIds = filteredData.map(getRowId);
-  const allFilteredSelected = filteredIds.length > 0 && filteredIds.every((id) => selected.has(id));
-  const someFilteredSelected = filteredIds.some((id) => selected.has(id)) && !allFilteredSelected;
-  const selectedCount = filteredIds.filter((id) => selected.has(id)).length;
+  // Reset to page 1 whenever the visible data set changes, so you never
+  // land on a page number that no longer has anything on it.
+  useEffect(() => {
+    setPage(1);
+  }, [search, filterValues]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * PAGE_SIZE;
+  const pagedData = filteredData.slice(pageStart, pageStart + PAGE_SIZE);
+
+  // "Select all" now means "select all on this page" — selecting 50 filtered
+  // rows silently via a checkbox for only 10 visible rows would be confusing.
+  const pagedIds = pagedData.map(getRowId);
+  const allPagedSelected = pagedIds.length > 0 && pagedIds.every((id) => selected.has(id));
+  const somePagedSelected = pagedIds.some((id) => selected.has(id)) && !allPagedSelected;
+  const selectedCount = filteredData.filter((r) => selected.has(getRowId(r))).length;
 
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    if (headerCheckboxRef.current) headerCheckboxRef.current.indeterminate = someFilteredSelected;
-  }, [someFilteredSelected]);
+    if (headerCheckboxRef.current) headerCheckboxRef.current.indeterminate = somePagedSelected;
+  }, [somePagedSelected]);
 
   function toggleAll() {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (allFilteredSelected) filteredIds.forEach((id) => next.delete(id));
-      else filteredIds.forEach((id) => next.add(id));
+      if (allPagedSelected) pagedIds.forEach((id) => next.delete(id));
+      else pagedIds.forEach((id) => next.add(id));
       return next;
     });
   }
@@ -85,6 +101,8 @@ export default function DataTable<T extends Record<string, unknown>>({
 
   const exportableColumns = columns.filter((c) => c.exportValue);
 
+  // Export/Print always operate on the full filtered set, not just the
+  // current page — pagination only affects what's rendered on screen.
   function getExportSet(mode: "all" | "selected") {
     return mode === "selected" ? filteredData.filter((r) => selected.has(getRowId(r))) : filteredData;
   }
@@ -130,28 +148,28 @@ export default function DataTable<T extends Record<string, unknown>>({
           </div>
 
           {filters.map((f) =>
-  f.isYearFilter ? (
-    <div key={f.key} className="w-48">
-      <YearScrollSelect
-        value={filterValues[f.key] ?? ""}
-        onChange={(year) => setFilterValues((prev) => ({ ...prev, [f.key]: year }))}
-        placeholder={`All ${f.label}`}
-      />
-    </div>
-  ) : (
-    <select
-      key={f.key}
-      value={filterValues[f.key] ?? ""}
-      onChange={(e) => setFilterValues((prev) => ({ ...prev, [f.key]: e.target.value }))}
-      className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-    >
-      <option value="">All {f.label}</option>
-      {filterOptions[f.key]?.map((opt) => (
-        <option key={opt} value={opt}>{opt}</option>
-      ))}
-    </select>
-  )
-)}
+            f.isYearFilter ? (
+              <div key={f.key} className="w-48">
+                <YearScrollSelect
+                  value={filterValues[f.key] ?? ""}
+                  onChange={(year) => setFilterValues((prev) => ({ ...prev, [f.key]: year }))}
+                  placeholder={`All ${f.label}`}
+                />
+              </div>
+            ) : (
+              <select
+                key={f.key}
+                value={filterValues[f.key] ?? ""}
+                onChange={(e) => setFilterValues((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              >
+                <option value="">All {f.label}</option>
+                {filterOptions[f.key]?.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            )
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -247,7 +265,7 @@ export default function DataTable<T extends Record<string, unknown>>({
                 <input
                   ref={headerCheckboxRef}
                   type="checkbox"
-                  checked={allFilteredSelected}
+                  checked={allPagedSelected}
                   onChange={toggleAll}
                   className="h-4 w-4 rounded border-slate-300 accent-primary"
                 />
@@ -260,7 +278,7 @@ export default function DataTable<T extends Record<string, unknown>>({
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((row) => {
+            {pagedData.map((row) => {
               const id = getRowId(row);
               const isSelected = selected.has(id);
               return (
@@ -297,9 +315,53 @@ export default function DataTable<T extends Record<string, unknown>>({
         </table>
       </div>
 
-      <div className="flex items-center justify-between border-t border-slate-100 p-4 text-xs text-slate-400 dark:border-slate-800">
-        <span>{filteredData.length} of {data.length} rows</span>
-        {selectedCount > 0 && <span>{selectedCount} selected</span>}
+      <div className="flex flex-col gap-3 border-t border-slate-100 p-4 text-xs text-slate-400 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <span>
+            Showing {filteredData.length === 0 ? 0 : pageStart + 1}–{Math.min(pageStart + PAGE_SIZE, filteredData.length)} of {filteredData.length}
+          </span>
+          {selectedCount > 0 && <span>{selectedCount} selected</span>}
+        </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+              aria-label="Previous page"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6" /></svg>
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+              .map((p, idx, arr) => (
+                <span key={p} className="flex items-center">
+                  {idx > 0 && arr[idx - 1] !== p - 1 && <span className="px-1 text-slate-300">…</span>}
+                  <button
+                    onClick={() => setPage(p)}
+                    className={`flex h-7 w-7 items-center justify-center rounded-md text-xs font-medium transition-colors ${
+                      p === currentPage
+                        ? "bg-primary text-white"
+                        : "text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                </span>
+              ))}
+
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+              aria-label="Next page"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6" /></svg>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

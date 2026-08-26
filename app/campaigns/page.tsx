@@ -3,16 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import CampaignCard from "../components/CampaignCard";
-import CampaignCarousel from "../components/CampaignCarousel";
-import CampaignStories from "../components/CampaignStories";
-import StoryViewer from "../components/StoryViewer";
+import CampaignCard from "@/components/CampaignCard";
+import CampaignCarousel from "@/components/CampaignCarousel";
+import CampaignStories from "@/components/CampaignStories";
+import StoryViewer from "@/components/StoryViewer";
 
-import type { StoryCampaign } from "../components/CampaignStories";
+import type { StoryCampaign } from "@/components/CampaignStories";
 
-import CampaignReveal from "../components/ui/CampaignReveal";
-import CampaignContainer from "../components/ui/CampaignContainer";
-import CampaignScrollToTopButton from "../components/ui/CampaignScrollToTopButton";
+import CampaignReveal from "@/components/ui/CampaignReveal";
+import CampaignContainer from "@/components/ui/CampaignContainer";
+import ScrollToTopButton from "@/components/ui/ScrollToTopButton";
 
 import {
   ArrowDown,
@@ -1099,7 +1099,7 @@ export default function CampaignsPage() {
           SCROLL TO TOP
       =================================================== */}
 
-      <CampaignScrollToTopButton />
+      <ScrollToTopButton />
 
     </main>
 
