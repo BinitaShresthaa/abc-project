@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { TableColumn, TableFilter } from "./types";
+import type { TableColumn, TableFilter, RowAction, BulkAction } from "./types";
+import RowMenu from "./RowMenu";
 import YearScrollSelect from "./YearScrollSelect";
-
 import { downloadCsv, downloadExcel, downloadPdf, downloadWord, printRows } from "./export-utils";
 
 type ExportFormat = "csv" | "excel" | "pdf" | "word";
@@ -15,12 +15,16 @@ export default function DataTable<T extends Record<string, unknown>>({
   columns,
   filters = [],
   rowIdKey,
+  rowActions,
+  bulkActions,
 }: {
   title: string;
   data: T[];
   columns: TableColumn<T>[];
   filters?: TableFilter<T>[];
   rowIdKey: keyof T;
+  rowActions?: RowAction<T>[];
+  bulkActions?: BulkAction<T>[];
 }) {
   const getRowId = (row: T) => String(row[rowIdKey]);
 
@@ -59,8 +63,6 @@ export default function DataTable<T extends Record<string, unknown>>({
     });
   }, [data, filters, filterValues, search, searchableColumns]);
 
-  // Reset to page 1 whenever the visible data set changes, so you never
-  // land on a page number that no longer has anything on it.
   useEffect(() => {
     setPage(1);
   }, [search, filterValues]);
@@ -70,8 +72,6 @@ export default function DataTable<T extends Record<string, unknown>>({
   const pageStart = (currentPage - 1) * PAGE_SIZE;
   const pagedData = filteredData.slice(pageStart, pageStart + PAGE_SIZE);
 
-  // "Select all" now means "select all on this page" — selecting 50 filtered
-  // rows silently via a checkbox for only 10 visible rows would be confusing.
   const pagedIds = pagedData.map(getRowId);
   const allPagedSelected = pagedIds.length > 0 && pagedIds.every((id) => selected.has(id));
   const somePagedSelected = pagedIds.some((id) => selected.has(id)) && !allPagedSelected;
@@ -101,8 +101,6 @@ export default function DataTable<T extends Record<string, unknown>>({
 
   const exportableColumns = columns.filter((c) => c.exportValue);
 
-  // Export/Print always operate on the full filtered set, not just the
-  // current page — pagination only affects what's rendered on screen.
   function getExportSet(mode: "all" | "selected") {
     return mode === "selected" ? filteredData.filter((r) => selected.has(getRowId(r))) : filteredData;
   }
@@ -173,6 +171,14 @@ export default function DataTable<T extends Record<string, unknown>>({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* bulk actions — only shown once at least one row is selected */}
+          {bulkActions && bulkActions.length > 0 && selectedCount > 0 && (
+            <BulkActionsMenu
+              actions={bulkActions}
+              selectedRows={filteredData.filter((r) => selected.has(getRowId(r)))}
+            />
+          )}
+
           {/* export */}
           <div className="relative">
             <button
@@ -275,6 +281,7 @@ export default function DataTable<T extends Record<string, unknown>>({
                   {col.header}
                 </th>
               ))}
+              {rowActions && rowActions.length > 0 && <th className="w-10 p-4" />}
             </tr>
           </thead>
           <tbody>
@@ -301,12 +308,17 @@ export default function DataTable<T extends Record<string, unknown>>({
                       {col.render(row)}
                     </td>
                   ))}
+                  {rowActions && rowActions.length > 0 && (
+                    <td className="p-4 text-right">
+                      <RowMenu row={row} actions={rowActions} />
+                    </td>
+                  )}
                 </tr>
               );
             })}
             {filteredData.length === 0 && (
               <tr>
-                <td colSpan={columns.length + 1} className="p-10 text-center text-sm text-slate-400">
+                <td colSpan={columns.length + 2} className="p-10 text-center text-sm text-slate-400">
                   No results match your search or filters.
                 </td>
               </tr>
@@ -363,6 +375,44 @@ export default function DataTable<T extends Record<string, unknown>>({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function BulkActionsMenu<T>({ actions, selectedRows }: { actions: BulkAction<T>[]; selectedRows: T[] }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary/90"
+      >
+        Actions ({selectedRows.length})
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+          {actions.map((a) => (
+            <button
+              key={a.label}
+              onClick={() => { a.onSelect(selectedRows); setOpen(false); }}
+              className="block w-full px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
