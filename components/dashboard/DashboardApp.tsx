@@ -7,6 +7,7 @@ import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import { viewRegistry } from "./views/registry";
 import DashboardHomeView from "./views/DashboardHomeView";
+import StudentEditView from "./views/StudentEditView";
 
 function flattenKeys(items: NavItem[]): Set<string> {
   const keys = new Set<string>();
@@ -40,13 +41,27 @@ export default function DashboardApp({
   const ActiveView = viewRegistry[safeKey] ?? DashboardHomeView;
   const title = findLabel(navItems, safeKey);
 
+  const EDIT_STUDENT_KEY = "student-edit";
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+
+  function openEditStudent(studentId: string) {
+    setEditingStudentId(studentId);
+    setActiveKey(EDIT_STUDENT_KEY);
+  }
+
+  const isEditingStudent = activeKey === EDIT_STUDENT_KEY && editingStudentId;
+
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
       <Sidebar items={navItems} activeKey={safeKey} onSelect={setActiveKey} />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Topbar title={title} user={user} />
+        <Topbar title={isEditingStudent ? "Edit Student" : title} user={user} />
         <main className="flex-1 overflow-y-auto p-6">
-          <ActiveView />
+          {isEditingStudent ? (
+            <StudentEditView studentId={editingStudentId} />
+          ) : (
+            <ActiveView onNavigate={setActiveKey} onEditStudent={openEditStudent} />
+          )}
         </main>
       </div>
     </div>
