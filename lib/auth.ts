@@ -1,7 +1,22 @@
 import { cookies } from "next/headers";
-import { mockUsers, mockCredentials, CURRENT_USER_ID } from "./mock-db";
-import { mockAlumni, mockAlumniCredentials, type Alumni } from "./mock-alumni";
+import { mockUsers, CURRENT_USER_ID } from "./mock-db";
+import { mockAlumni, type Alumni } from "./mock-alumni";
 import type { DashboardUser } from "./roles";
+
+type MockCredential = { password: string; userId: string };
+type MockAlumniCredential = { password: string; alumniId: string };
+
+const mockCredentials: Record<string, MockCredential> = Object.fromEntries(
+  mockUsers
+    .filter((u: any) => typeof u.email === "string" && typeof u.password === "string")
+    .map((u: any) => [u.email.trim().toLowerCase(), { password: u.password, userId: u.id }])
+) as Record<string, MockCredential>;
+
+const mockAlumniCredentials: Record<string, MockAlumniCredential> = Object.fromEntries(
+  mockAlumni
+    .filter((a: any) => typeof a.email === "string" && typeof a.password === "string")
+    .map((a: any) => [a.email.trim().toLowerCase(), { password: a.password, alumniId: a.id }])
+) as Record<string, MockAlumniCredential>;
 
 export const DASHBOARD_SESSION_COOKIE = "dashboard_session_user_id";
 export const ALUMNI_SESSION_COOKIE = "almuni_session_alumni_id";

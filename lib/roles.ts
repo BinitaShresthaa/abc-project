@@ -11,5 +11,6 @@ export interface DashboardUser {
   email: string;
   avatarUrl?: string;
   role: Role;
-  assignedFaculty?: string; // only meaningful for the "contact_person" role
+  assignedFaculty?: string;
+  password?: string; // mock-only; must be hashed once a real DB exists, never returned to the client
 }
