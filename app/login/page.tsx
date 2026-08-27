@@ -1,18 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { quicksand } from '@/lib/fonts';
 import AuthCard from '@/components/auth/AuthCard';
 import BrandPanel from '@/components/auth/BrandPanel';
 import FormField from '@/components/auth/FormField';
 import SubmitButton from '@/components/auth/SubmitButton';
 import { emailIcon, lockIcon } from '@/components/auth/icons';
+import { loginAction } from './action';
+
+
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const handleSignin = () => {
-    console.log('Signing in:', formData);
+    setError(null);
+    startTransition(async () => {
+      const result = await loginAction(formData.email, formData.password);
+      // On success, loginAction redirects server-side, so we only ever
+      // land back here when there's an error to show.
+      if (result?.error) {
+        setError(result.error);
+      }
+    });
   };
 
   return (
@@ -41,7 +54,7 @@ export default function LoginPage() {
           onChange={(v) => setFormData((p) => ({ ...p, email: v }))}
         />
       </div>
-      <div className="mb-6">
+      <div className="mb-4">
         <FormField
           icon={lockIcon}
           type="password"
@@ -52,7 +65,15 @@ export default function LoginPage() {
         />
       </div>
 
-      <SubmitButton onClick={handleSignin}>Sign In</SubmitButton>
+      {error && (
+        <p className="text-[12.5px] text-red-500 mb-4">{error}</p>
+      )}
+
+      <div className="mb-2" />
+
+      <SubmitButton onClick={handleSignin}>
+        {isPending ? 'Signing in...' : 'Sign In'}
+      </SubmitButton>
     </AuthCard>
   );
 }

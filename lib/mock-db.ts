@@ -19,22 +19,39 @@ export const mockPermissions: Record<string, Set<string>> = {
     "settings",
   ]),
   "role-hod": new Set([
-    "dashboard", "teacher", "teacher-list", "student", "student-list", "student-add", "campaign", "campaign-list",
+    "dashboard", "student", "student-list", "student-left","passout-student-list",
   ]),
   "role-authorized": new Set(["dashboard", "student", "student-list"]),
   "role-faculty": new Set(["dashboard", "campaign", "campaign-list"]),
   "role-student": new Set(["dashboard"]),
 };
 
+// Only Admin and HOD have working logins for now.
+// Add more entries here later (authorized_person, faculty, student) when needed.
 export const mockUsers: DashboardUser[] = [
   {
     id: "user-1",
     name: "John Doe",
-    email: "john@example.com",
+    email: "admin@example.com",
     avatarUrl: undefined,
     role: mockRoles.find((r) => r.id === "role-admin")!,
   },
+  {
+    id: "user-2",
+    name: "Hari Bahadur Thapa",
+    email: "hod@example.com",
+    avatarUrl: undefined,
+    role: mockRoles.find((r) => r.id === "role-hod")!,
+  },
 ];
 
-// change this to preview a different user/role's sidebar + permissions
+// email -> password + which mockUsers entry it logs into.
+// Swap this out for real (hashed) password lookups against a database later.
+export const mockCredentials: Record<string, { password: string; userId: string }> = {
+  "admin@example.com": { password: "admin123", userId: "user-1" },
+  "hod@example.com": { password: "hod123", userId: "user-2" },
+};
+
+// Fallback user used only when no login cookie is present yet.
+// Once someone actually logs in via /login, the session cookie (see lib/auth.ts) takes over.
 export const CURRENT_USER_ID = "user-1";
