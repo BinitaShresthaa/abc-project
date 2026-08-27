@@ -2,15 +2,16 @@
 
 import { useState } from 'react';
 import { userIcon, lockIcon, eyeIcon, logOutIcon, chevronRightIcon, arrowLeftIcon } from './icons';
+import PasswordField from './PasswordField';
 
-type View = 'menu' | 'display';
+type View = 'menu' | 'display' | 'password';
 type Visibility = 'public' | 'private';
 
 interface ProfileMenuProps {
   userName?: string;
   onViewProfile?: () => void;
   onSetProfile?: () => void;
-  onChangePassword?: () => void;
+  onChangePasswordSubmit?: (data: { currentPassword: string; newPassword: string }) => void;
   onVisibilityChange?: (visibility: Visibility) => void;
   onLogOut?: () => void;
 }
@@ -32,17 +33,124 @@ export default function ProfileMenu({
   userName = 'Your Name',
   onViewProfile,
   onSetProfile,
-  onChangePassword,
+  onChangePasswordSubmit,
   onVisibilityChange,
   onLogOut,
 }: ProfileMenuProps) {
   const [view, setView] = useState<View>('menu');
   const [visibility, setVisibility] = useState<Visibility>('public');
 
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
   const selectVisibility = (v: Visibility) => {
     setVisibility(v);
     onVisibilityChange?.(v);
   };
+
+  const resetPasswordForm = () => {
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordSuccess(false);
+  };
+
+  const backToMenu = () => {
+    setView('menu');
+    resetPasswordForm();
+  };
+
+  const mismatch = confirmPassword.length > 0 && confirmPassword !== newPassword;
+  const tooShort = newPassword.length > 0 && newPassword.length < 6;
+  const canSubmitPassword =
+    currentPassword.trim() !== '' &&
+    newPassword.trim() !== '' &&
+    confirmPassword.trim() !== '' &&
+    !mismatch &&
+    !tooShort;
+
+  const handlePasswordSubmit = () => {
+    if (!canSubmitPassword) return;
+    // Placeholder — no real backend call yet. Swap this for a call into
+    // lib/auth.ts (or an API route) once real password changes are wired up.
+    onChangePasswordSubmit?.({ currentPassword, newPassword });
+    setPasswordSuccess(true);
+  };
+
+  // --- sub-view: Change Password ---
+  if (view === 'password') {
+    return (
+      <div className="absolute right-0 top-full mt-2 w-[320px] rounded-2xl bg-white shadow-[0_16px_40px_rgba(11,90,147,0.18)] border border-black/5 p-4 z-50">
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            type="button"
+            onClick={backToMenu}
+            aria-label="Back"
+            className="w-9 h-9 rounded-full border-[1.5px] border-[#0E76BD] text-[#0E76BD] flex items-center justify-center hover:bg-[#EAF4FB] transition-colors shrink-0"
+          >
+            {arrowLeftIcon}
+          </button>
+          <h3 className="text-[17px] font-bold text-[#241B3A]">Change Password</h3>
+        </div>
+
+        {passwordSuccess ? (
+          <div className="px-1 py-4 text-center">
+            <p className="text-[14px] font-semibold text-[#241B3A] mb-1">Password updated</p>
+            <p className="text-[12.5px] text-[#8B87A3] mb-4">Your password has been changed successfully.</p>
+            <button
+              type="button"
+              onClick={backToMenu}
+              className="text-[13px] font-semibold text-[#0E76BD] hover:underline"
+            >
+              Back to menu
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-3 mb-1">
+              <PasswordField
+                placeholder="Current password"
+                value={currentPassword}
+                onChange={setCurrentPassword}
+                autoFocus
+              />
+              <PasswordField
+                placeholder="New password"
+                value={newPassword}
+                onChange={setNewPassword}
+              />
+              <PasswordField
+                placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={setConfirmPassword}
+              />
+            </div>
+
+            {tooShort && (
+              <p className="text-[11.5px] text-red-500 mt-2 ml-1">Password must be at least 6 characters.</p>
+            )}
+            {mismatch && (
+              <p className="text-[11.5px] text-red-500 mt-2 ml-1">Passwords do not match.</p>
+            )}
+
+            <button
+              type="button"
+              onClick={handlePasswordSubmit}
+              disabled={!canSubmitPassword}
+              className="w-full mt-3 rounded-full bg-[linear-gradient(120deg,#0E76BD,#0B5A93)] text-white
+                         text-[13px] font-semibold uppercase tracking-[1.5px] py-3
+                         shadow-[0_10px_22px_rgba(14,118,189,0.3)]
+                         disabled:opacity-40 transition-all"
+            >
+              Update Password
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
 
   // --- sub-view: Display Profile ---
   if (view === 'display') {
@@ -95,7 +203,7 @@ export default function ProfileMenu({
   // --- main menu ---
   const menuItems = [
     { icon: userIcon, label: 'Set Profile', onClick: onSetProfile },
-    { icon: lockIcon, label: 'Change Password', onClick: onChangePassword },
+    { icon: lockIcon, label: 'Change Password', onClick: () => setView('password') },
     { icon: eyeIcon, label: 'Display Profile', onClick: () => setView('display') },
   ];
 

@@ -10,15 +10,7 @@ export default async function CampaignsPage() {
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import CampaignCard from "./components/CampaignCard";
-import CampaignCarousel from "./components/CampaignCarousel";
-import CampaignStories from "./components/CampaignStories";
-import StoryViewer from "./components/StoryViewer";
 
-import type { StoryCampaign } from "./components/CampaignStories";
-
-import CampaignReveal from "./components/ui/CampaignReveal";
-import CampaignContainer from "./components/ui/CampaignContainer";
 import ScrollToTopButton from "@/components/ui/ScrollToTopButton";
 
 import {
@@ -32,6 +24,12 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import CampaignCard from "@/components/CampaignCard";
+import CampaignCarousel from "@/components/CampaignCarousel";
+import CampaignStories, { StoryCampaign } from "@/components/CampaignStories";
+import StoryViewer from "@/components/StoryViewer";
+import CampaignContainer from "@/components/ui/CampaignContainer";
+import CampaignReveal from "@/components/ui/CampaignReveal";
 
 /* =========================================================
    CAMPAIGN TYPE

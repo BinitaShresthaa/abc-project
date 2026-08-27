@@ -2,12 +2,15 @@
 
 import { useState, useRef, useEffect } from 'react';
 import ProfileMenu from './ProfileMenu';
-import { navItems, type NavKey } from './navItems';
+import type { NavKey } from './navItems';
 import { searchIcon } from './icons';
 
 interface TopbarProps {
-  active: NavKey;
-  onChange: (key: NavKey) => void;
+  // Kept optional so existing callers that still pass these (in sync with
+  // the Sidebar) don't need to change. Topbar itself no longer renders nav.
+  active?: NavKey;
+  onChange?: (key: NavKey) => void;
+  onSetProfile?: () => void;
 }
 
 const chevronDownIcon = (
@@ -16,7 +19,7 @@ const chevronDownIcon = (
   </svg>
 );
 
-export default function Topbar({ active, onChange }: TopbarProps) {
+export default function Topbar({ onSetProfile }: TopbarProps) {
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -34,12 +37,16 @@ export default function Topbar({ active, onChange }: TopbarProps) {
     <header className="sticky top-0 z-50 h-16 bg-white border-b border-black/5 shadow-[0_1px_3px_rgba(11,90,147,0.06)]">
       <div className="h-full max-w-[1600px] mx-auto flex items-center justify-between px-4 md:px-6 gap-4">
 
-        {/* LEFT — logo slot + search */}
-        <div className="flex items-center gap-2 shrink-0 w-[140px] md:w-[280px]">
+        {/* LEFT — logo only */}
+        <div className="flex items-center shrink-0 w-[56px] md:w-[180px]">
           <div className="w-10 h-10 rounded-full bg-[#EAF4FB] flex items-center justify-center shrink-0">
             {/* e.g. <img src="/logo.svg" alt="Logo" className="w-6 h-6" /> */}
           </div>
-          <div className="relative hidden md:block flex-1">
+        </div>
+
+        {/* CENTER — search */}
+        <div className="flex-1 flex justify-center px-2">
+          <div className="relative w-full max-w-[480px]">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8B87A3]">
               {searchIcon}
             </span>
@@ -52,28 +59,6 @@ export default function Topbar({ active, onChange }: TopbarProps) {
             />
           </div>
         </div>
-
-        {/* CENTER — nav */}
-        <nav className="flex-1 flex items-center justify-center gap-1 max-w-[420px]">
-          {navItems.map((item) => {
-            const isActive = active === item.key;
-            return (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => onChange(item.key)}
-                title={item.label}
-                className={`relative flex items-center justify-center w-24 md:w-28 h-14 rounded-xl transition-colors
-                           ${isActive ? 'text-[#0E76BD]' : 'text-[#8B87A3] hover:bg-[#F5F4FB]'}`}
-              >
-                {item.icon}
-                {isActive && (
-                  <span className="absolute bottom-0 left-2 right-2 h-[3px] bg-[#0E76BD] rounded-t-full" />
-                )}
-              </button>
-            );
-          })}
-        </nav>
 
         {/* RIGHT — profile slot + dropdown */}
         <div className="relative flex items-center w-[120px] shrink-0 justify-end" ref={profileRef}>
@@ -91,8 +76,11 @@ export default function Topbar({ active, onChange }: TopbarProps) {
           {profileOpen && (
             <ProfileMenu
               onViewProfile={() => console.log('View Profile')}
-              onSetProfile={() => console.log('Set Profile')}
-              onChangePassword={() => console.log('Change Password')}
+              onSetProfile={() => {
+                setProfileOpen(false);
+                onSetProfile?.();
+              }}
+              onChangePasswordSubmit={(data) => console.log('Password change submitted:', data)}
               onVisibilityChange={(v) => console.log('Visibility set to:', v)}
               onLogOut={() => console.log('Log out')}
             />
