@@ -17,6 +17,12 @@ export const alumniColumns: TableColumn<Alumni>[] = [
   searchable: true,
   searchValue: (r) => `${r.name} ${r.regNo}`,      // search still matches on either name or reg no
 },
+{
+  key: "gender",
+  header: "Gender",
+  render: (r) => <span>{r.gender}</span>,
+  exportValue: (r) => r.gender,
+},
   {
     key: "email",
     header: "Email",

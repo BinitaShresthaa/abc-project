@@ -6,6 +6,12 @@ import StudentListView from "./StudentListView";
 import LeftStudentListView from "./LeftStudentListView";
 import PassoutStudentListView from "./PassoutStudentListView";
 import StudentAddView from "./StudentAddView";
+import CampaignListView from "./CampaignListView";
+import CampaignAddView from "./CampaignAddView";
+import CampaignHighlightView from "./CampaignHighlightView";
+import CampaignPastView from "./CampaignPastView";
+import ContactListView from "./ContactListView";
+import ContactAddView from "./ContactAddView";
 
 // Add one line here per view. The key must match a `key` in lib/nav-config.ts.
 export const viewRegistry: Record<string, ComponentType<Partial<DashboardViewProps>>> = {
@@ -15,4 +21,10 @@ export const viewRegistry: Record<string, ComponentType<Partial<DashboardViewPro
   "student-add": StudentAddView,
   "student-left": LeftStudentListView,
   "passout-student-list": PassoutStudentListView,
+  "campaign-list": CampaignListView,
+"campaign-add": CampaignAddView,
+"campaign-highlight": CampaignHighlightView,
+"campaign-past": CampaignPastView,
+ "contact-list": ContactListView,
+  "contact-add": ContactAddView,
 };

@@ -2,8 +2,7 @@ import type { Role, DashboardUser } from "./roles";
 
 export const mockRoles: Role[] = [
   { id: "role-admin", name: "admin", label: "Administrator", isSystem: true },
-  { id: "role-hod", name: "hod", label: "Head of Department", isSystem: false },
-  { id: "role-authorized", name: "authorized_person", label: "Authorized Person", isSystem: false },
+  { id: "role-contact", name: "contact_person", label: "Contact Person", isSystem: false },
   { id: "role-faculty", name: "faculty", label: "Faculty", isSystem: false },
   { id: "role-student", name: "student", label: "Student", isSystem: false },
 ];
@@ -18,23 +17,22 @@ export const mockPermissions: Record<string, Set<string>> = {
     "alumni", "alumni-list", "alumni-story", "alumni-verification","notification",
     "settings",
   ]),
-  "role-hod": new Set([
-    "dashboard", "teacher", "teacher-list", "student", "student-list", "student-add", "campaign", "campaign-list",
-  ]),
-  "role-authorized": new Set(["dashboard", "student", "student-list"]),
+"role-contact": new Set(["dashboard", "student-list", "student-left", "passout-student-list"]),
   "role-faculty": new Set(["dashboard", "campaign", "campaign-list"]),
   "role-student": new Set(["dashboard"]),
 };
 
 export const mockUsers: DashboardUser[] = [
   {
-    id: "user-1",
-    name: "John Doe",
-    email: "john@example.com",
-    avatarUrl: undefined,
+    id: "user-1", name: "John Doe", email: "john@example.com",
     role: mockRoles.find((r) => r.id === "role-admin")!,
+  },
+  {
+    id: "user-2", name: "Bimal Giri", email: "bimal.giri@aadikavicampus.edu.np",
+    role: mockRoles.find((r) => r.id === "role-contact")!,
+    assignedFaculty: "BICTE", // this Contact Person only ever sees BICTE students
   },
 ];
 
-// change this to preview a different user/role's sidebar + permissions
+// Switch this to "user-2" to preview the Contact Person experience.
 export const CURRENT_USER_ID = "user-1";

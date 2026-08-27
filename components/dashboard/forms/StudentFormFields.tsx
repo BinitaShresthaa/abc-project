@@ -3,6 +3,7 @@ import type { NewStudentInput } from "@/lib/mock-students";
 import FormField from "./FormField";
 import PhotoUploadField from "./PhotoUploadField";
 import YearSemesterSelect from "@/components/dashboard/table/YearSemesterSelect";
+import GenderSelect from "./GenderSelect";
 
 export const inputClass =
   "w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200";
@@ -42,7 +43,9 @@ export default function StudentFormFields({
             ))}
           </select>
         </FormField>
-
+<FormField label="Gender" required>
+  <GenderSelect value={form.gender} onChange={(g) => update("gender", g)} />
+</FormField>
         <FormField label="Contact No." required>
           <input
             value={form.contact}

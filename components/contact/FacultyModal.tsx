@@ -108,8 +108,7 @@ export default function FacultyModal({
               </span>
 
               <p className="mt-4 text-left text-sm leading-relaxed text-slate-600">
-                {member.bio ??
-                  `${member.name} oversees ${member.department.toLowerCase()} as the designated Faculty Focal person, managing student records and academic coordination for the department.`}
+                {member.bio ?? `${member.name} is the Contact Person for ${member.department}.`}
               </p>
 
               {(member.education || member.officeHours) && (
