@@ -1,5 +1,6 @@
 import type { YearSemesterValue } from "./academic-progress";
 import { getFacultyLevel } from "./faculty-data";
+import type { Gender } from "./gender";
 
 export type StudentStatus = "active" | "left" | "passout";
 
@@ -8,6 +9,7 @@ export interface Student {
   regNo: string;
   photo?: string;
   name: string;
+  gender: Gender;
   contact: string;
   email: string;
   dob: string;
@@ -17,12 +19,12 @@ export interface Student {
   faculty: string;
   batch: string;
   progress: YearSemesterValue;
-  status: StudentStatus; // new
+  status: StudentStatus;
 }
 
 export const mockStudents: Student[] = [
   {
-    id: "1", regNo: "STU-2023-014", name: "Kritika Basnet",
+    id: "1", regNo: "STU-2023-014", name: "Kritika Basnet", gender: "Female",
     contact: "+977-9840000001", email: "kritika.b@example.com",
     dob: "2004-03-12", address: "Damauli, Tanahun",
     guardianName: "Ram Basnet", guardianContact: "+977-9840000099",
@@ -30,7 +32,7 @@ export const mockStudents: Student[] = [
     status: "active",
   },
   {
-    id: "2", regNo: "STU-2022-092", name: "Nabin Lama",
+    id: "2", regNo: "STU-2022-092", name: "Nabin Lama", gender: "Male",
     contact: "+977-9850000002", email: "nabin.l@example.com",
     dob: "2003-11-02", address: "Vyas-1, Tanahun",
     guardianName: "Sita Lama", guardianContact: "+977-9850000098",
@@ -38,7 +40,7 @@ export const mockStudents: Student[] = [
     status: "active",
   },
   {
-    id: "3", regNo: "STU-M-2024-003", name: "Roshani Adhikari",
+    id: "3", regNo: "STU-M-2024-003", name: "Roshani Adhikari", gender: "Female",
     contact: "+977-9860000003", email: "roshani.a@example.com",
     dob: "2000-06-21", address: "Damauli, Tanahun",
     guardianName: "Keshav Adhikari", guardianContact: "+977-9860000097",
@@ -53,6 +55,7 @@ export function setStudentStatus(id: string, status: StudentStatus) {
   const student = mockStudents.find((s) => s.id === id);
   if (student) student.status = status;
 }
+
 // Generates a simple sequential registration number.
 // Replace with your real numbering scheme (or a DB auto-increment) later.
 function generateRegNo(faculty: string): string {
@@ -64,6 +67,7 @@ function generateRegNo(faculty: string): string {
 
 export interface NewStudentInput {
   name: string;
+  gender: Gender;
   contact: string;
   email: string;
   dob: string;
@@ -88,6 +92,7 @@ export async function createStudent(input: NewStudentInput): Promise<Student> {
   mockStudents.push(newStudent);
   return newStudent;
 }
+
 export function getStudentById(id: string): Student | undefined {
   return mockStudents.find((s) => s.id === id);
 }

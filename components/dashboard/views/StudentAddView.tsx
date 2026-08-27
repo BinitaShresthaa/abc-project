@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { createStudent, type NewStudentInput } from "@/lib/mock-students";
 import { getFacultyLevel } from "@/lib/faculty-data";
+import type { Gender } from "@/lib/gender";
 import StudentFormFields from "@/components/dashboard/forms/StudentFormFields";
 
 const emptyForm: NewStudentInput = {
-  name: "", contact: "", email: "", dob: "", address: "",
+  name: "", gender: "" as Gender, contact: "", email: "", dob: "", address: "",
   guardianName: "", guardianContact: "", faculty: "",
   progress: { mode: "year", value: 1 }, photo: undefined,
 };
@@ -30,14 +31,14 @@ export default function StudentAddView() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!form.name || !form.email || !form.faculty || !form.contact) {
+    if (!form.name || !form.email || !form.faculty || !form.contact || !form.gender) {
       setError("Please fill in all required fields.");
       return;
     }
     setSubmitting(true);
     try {
-      const created = await createStudent(form);
-      setSuccessMsg(`${created.name} was added with registration number ${created.regNo}.`);
+      await createStudent(form);
+      setSuccessMsg("Added successfully");
       setForm(emptyForm);
     } catch {
       setError("Something went wrong while saving. Please try again.");

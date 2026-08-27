@@ -12,6 +12,12 @@ export const leftStudentColumns: TableColumn<Student>[] = [
     searchable: true,
     searchValue: (r) => `${r.name} ${r.regNo}`,
   },
+  {
+  key: "gender",
+  header: "Gender",
+  render: (r) => <span>{r.gender}</span>,
+  exportValue: (r) => r.gender,
+},
   { key: "contact", header: "Contact No.", render: (r) => <span>{r.contact}</span>, exportValue: (r) => r.contact },
   { key: "email", header: "Email", render: (r) => <span>{r.email}</span>, exportValue: (r) => r.email },
   { key: "dob", header: "Date of Birth", render: (r) => <span>{r.dob}</span>, exportValue: (r) => r.dob },

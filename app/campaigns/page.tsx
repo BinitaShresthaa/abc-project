@@ -1,5 +1,12 @@
-"use client";
+import { getAllCampaigns } from "@/lib/campaigns/campaigns-db";
+import { getAllHighlights } from "@/lib/campaigns/highlights-db";
+import CampaignsClient from "@/components/CampaignsClient";
 
+<<<<<<< HEAD
+export default async function CampaignsPage() {
+  const [campaigns, highlights] = await Promise.all([getAllCampaigns(), getAllHighlights()]);
+  return <CampaignsClient campaigns={campaigns} highlights={highlights} />;
+=======
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -1102,4 +1109,5 @@ export default function CampaignsPage() {
     </main>
 
   );
+>>>>>>> 77bb09c0767bcbebeed5fa5782162acf04efa85b
 }

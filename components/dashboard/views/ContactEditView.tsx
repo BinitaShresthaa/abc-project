@@ -1,0 +1,114 @@
+"use client";
+
+import { useState } from "react";
+import { getContactById, updateContact, type NewContactInput, type ContactPerson } from "@/lib/mock-contacts";
+import ContactFormFields from "@/components/dashboard/forms/ContactFormFields";
+import { useToast } from "@/lib/toast-context";
+
+function toFormInput(contact: ContactPerson): NewContactInput {
+  const { name, gender, email, contactNo, password, position, assignedFaculty, photo } = contact;
+  return { name, gender, email, contactNo, password, position, assignedFaculty, photo };
+}
+
+export default function ContactEditView({
+  contactId,
+  onDone,
+}: {
+  contactId: string;
+  onDone?: () => void;
+}) {
+  const { showToast } = useToast();
+  const contact = getContactById(contactId);
+
+  if (!contact) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+        Contact person not found. They may have been removed.
+        {onDone && (
+          <button onClick={onDone} className="mt-3 block text-sm font-medium text-primary hover:underline">
+            ← Back
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  const originalForm = toFormInput(contact);
+  const [form, setForm] = useState<NewContactInput>(originalForm);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function update<K extends keyof NewContactInput>(key: K, value: NewContactInput[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+if (!form.name || !form.email || !form.assignedFaculty || !form.password || !form.gender) {      setError("Please fill in all required fields.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await updateContact(contactId, form);
+      setSubmitting(false);
+      showToast("Updated successfully");
+      onDone?.();
+    } catch {
+      setSubmitting(false);
+      setError("Something went wrong while saving. Please try again.");
+    }
+  }
+
+  function handleReset() {
+    setForm(originalForm);
+    setError(null);
+  }
+
+  return (
+    <div className="max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+      {onDone && (
+        <button
+          onClick={onDone}
+          className="mb-4 flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-primary dark:text-slate-400"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          Back
+        </button>
+      )}
+
+      <h2 className="text-base font-bold text-slate-800 dark:text-white">Edit Contact Person</h2>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        Contact ID <span className="font-mono">{contact.contactId}</span>
+      </p>
+
+      {error && (
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-500/10 dark:text-red-400">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+        <ContactFormFields form={form} update={update} />
+        <div className="flex items-center gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
+          <button
+            type="submit"
+            disabled={submitting}
+            className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {submitting ? "Updating..." : "Update Contact"}
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="rounded-lg px-5 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
+          >
+            Reset
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

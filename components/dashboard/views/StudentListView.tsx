@@ -7,49 +7,57 @@ import DataTable from "@/components/dashboard/table/DataTable";
 import type { Student } from "@/lib/mock-students";
 import type { RowAction, BulkAction } from "@/components/dashboard/table/types";
 import type { DashboardViewProps } from "@/lib/view-types";
+import { useDashboardUser } from "@/lib/dashboard-user-context";
+import { isContactPerson } from "@/lib/permissions-helpers";
 
-export default function StudentListView({ onEditStudent }: Partial<DashboardViewProps>) {
+export default function StudentListView({ onEditStudent, page, onPageChange }: Partial<DashboardViewProps>) {
   const [, forceRefresh] = useState(0);
-  const activeStudents = mockStudents.filter((s) => s.status === "active");
-  type TableStudent = Student & Record<string, unknown>;
+  const user = useDashboardUser();
+  const restricted = isContactPerson(user);
+
+  const activeStudents = mockStudents.filter((s) => {
+    if (s.status !== "active") return false;
+    if (restricted) return s.faculty === user.assignedFaculty;
+    return true;
+  });
 
   function handleStatusChange(student: Student, status: "left" | "passout") {
     setStudentStatus(student.id, status);
-    forceRefresh((n) => n + 1); // re-render since mockStudents mutated in place
+    forceRefresh((n) => n + 1);
   }
 
-  const rowActions: RowAction<TableStudent>[] = [
-    { label: "Edit", onSelect: (r) => onEditStudent?.(r.id) },
-    { label: "Mark as Left", onSelect: (r) => handleStatusChange(r, "left") },
-    { label: "Mark as Passout", onSelect: (r) => handleStatusChange(r, "passout") },
-  ];
+  const rowActions: RowAction<Student>[] = restricted
+    ? []
+    : [
+        { label: "Edit", onSelect: (r) => onEditStudent?.(r.id) },
+        { label: "Mark as Left", onSelect: (r) => handleStatusChange(r, "left") },
+        { label: "Mark as Passout", onSelect: (r) => handleStatusChange(r, "passout") },
+      ];
 
-  const bulkActions: BulkAction<TableStudent>[] = [
-    {
-      label: "Mark as Passout",
-      onSelect: (rows) => {
-        rows.forEach((r) => setStudentStatus(r.id, "passout"));
-        forceRefresh((n) => n + 1);
-      },
-    },
-    {
-      label: "Mark as Left",
-      onSelect: (rows) => {
-        rows.forEach((r) => setStudentStatus(r.id, "left"));
-        forceRefresh((n) => n + 1);
-      },
-    },
-  ];
+  const bulkActions: BulkAction<Student>[] = restricted
+    ? []
+    : [
+        {
+          label: "Mark as Passout",
+          onSelect: (rows) => { rows.forEach((r) => setStudentStatus(r.id, "passout")); forceRefresh((n) => n + 1); },
+        },
+        {
+          label: "Mark as Left",
+          onSelect: (rows) => { rows.forEach((r) => setStudentStatus(r.id, "left")); forceRefresh((n) => n + 1); },
+        },
+      ];
 
   return (
-    <DataTable<TableStudent>
-      title="Student List"
-      data={activeStudents as TableStudent[]}
-      columns={studentColumns as any}
+    <DataTable<Student & Record<string, unknown>>
+      title={restricted ? `Student List — ${user.assignedFaculty}` : "Student List"}
+      data={activeStudents as (Student & Record<string, unknown>)[]}
+      columns={studentColumns}
       filters={studentFilters}
       rowIdKey="id"
       rowActions={rowActions}
       bulkActions={bulkActions}
+      page={page}
+      onPageChange={onPageChange}
     />
   );
 }

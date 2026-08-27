@@ -4,16 +4,31 @@ import { useState } from "react";
 import { getStudentById, updateStudent, type NewStudentInput, type Student } from "@/lib/mock-students";
 import { getFacultyLevel } from "@/lib/faculty-data";
 import StudentFormFields from "@/components/dashboard/forms/StudentFormFields";
+import { useToast } from "@/lib/toast-context";
 
 function toFormInput(student: Student): NewStudentInput {
-  // Strip out the system-assigned fields (id, regNo, batch, status) —
-  // the edit form only touches the fields a student's details actually consist of.
-  const { name, contact, email, dob, address, guardianName, guardianContact, faculty, progress, photo } = student;
-  return { name, contact, email, dob, address, guardianName, guardianContact, faculty, progress, photo };
+  const { name, gender, contact, email, dob, address, guardianName, guardianContact, faculty, progress, photo } = student;
+  return { name, gender, contact, email, dob, address, guardianName, guardianContact, faculty, progress, photo };
 }
 
-export default function StudentEditView({ studentId }: { studentId: string }) {
+export default function StudentEditView({
+  studentId,
+  onDone,
+}: {
+  studentId: string;
+  onDone?: () => void;
+}) {
+  const { showToast } = useToast(); // ✅ inside the component now
+
   const student = getStudentById(studentId);
+
+  // ✅ hooks below must run every time, so give them a safe fallback instead
+  // of returning before they're called.
+  const [form, setForm] = useState<NewStudentInput>(() =>
+    student ? toFormInput(student) : ({} as NewStudentInput)
+  );
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!student) {
     return (
@@ -23,12 +38,7 @@ export default function StudentEditView({ studentId }: { studentId: string }) {
     );
   }
 
-  const originalForm = toFormInput(student); // captured once, used by Reset
-  const [form, setForm] = useState<NewStudentInput>(originalForm);
-  const [submitting, setSubmitting] = useState(false);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
+  const originalForm = toFormInput(student);
   const level = form.faculty ? getFacultyLevel(form.faculty) : "bachelor";
 
   function update<K extends keyof NewStudentInput>(key: K, value: NewStudentInput[K]) {
@@ -36,9 +46,6 @@ export default function StudentEditView({ studentId }: { studentId: string }) {
   }
 
   function handleFacultyChange(faculty: string) {
-    // Only reset progress to Year 1 if the level actually changes —
-    // unlike Add, editing shouldn't wipe a valid existing selection
-    // just because the faculty field was re-touched without truly changing level.
     setForm((prev) => {
       const changedLevel = getFacultyLevel(faculty) !== getFacultyLevel(prev.faculty || faculty);
       return { ...prev, faculty, progress: changedLevel ? { mode: "year", value: 1 } : prev.progress };
@@ -48,39 +55,43 @@ export default function StudentEditView({ studentId }: { studentId: string }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!form.name || !form.email || !form.faculty || !form.contact) {
-      setError("Please fill in all required fields.");
+if (!form.name || !form.email || !form.faculty || !form.contact || !form.gender) {      setError("Please fill in all required fields.");
       return;
     }
     setSubmitting(true);
     try {
-      const updated = await updateStudent(studentId, form);
-      setSuccessMsg(updated ? `${updated.name}'s details have been updated.` : "Update failed.");
+      await updateStudent(studentId, form);
+      showToast("Updated successfully");
+      onDone?.();
     } catch {
       setError("Something went wrong while saving. Please try again.");
-    } finally {
       setSubmitting(false);
     }
   }
 
   function handleReset() {
-    setForm(originalForm); // restores the student's previous data, not a blank form
-    setSuccessMsg(null);
+    setForm(originalForm);
     setError(null);
   }
 
   return (
     <div className="max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+        {onDone && (
+        <button
+          onClick={onDone}
+          className="mb-4 flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-primary dark:text-slate-400"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          Back
+        </button>
+      )}
       <h2 className="text-base font-bold text-slate-800 dark:text-white">Edit Student</h2>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         Registration No. <span className="font-mono">{student.regNo}</span> — batch and status are not editable here.
       </p>
 
-      {successMsg && (
-        <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-500/10 dark:text-emerald-400">
-          {successMsg}
-        </div>
-      )}
       {error && (
         <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-500/10 dark:text-red-400">
           {error}
@@ -89,7 +100,6 @@ export default function StudentEditView({ studentId }: { studentId: string }) {
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-5">
         <StudentFormFields form={form} update={update} level={level} onFacultyChange={handleFacultyChange} />
-
         <div className="flex items-center gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
           <button
             type="submit"
