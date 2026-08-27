@@ -7,12 +7,12 @@ export interface Alumni {
   name: string;
   gender: Gender;
   email: string;
+  password?: string; // mock-only, same caveat as above
   contact: string;
   currentJob: string;
   faculty: string;
   batch: string;
   passoutYear: string;
-  address?: string;
 }
 
 export const mockAlumni: Alumni[] = [

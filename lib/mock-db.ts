@@ -12,26 +12,26 @@ export const mockPermissions: Record<string, Set<string>> = {
     "dashboard",
     "campus-admin", "campus-admin-add", "campus-admin-list",
     "contact", "contact-add", "contact-list",
-    "student", "student-add", "student-list", "student-left","passout-student-list",
-    "campaign", "campaign-add", "campaign-list","campaign-highlight","campaign-donation", "campaign-past",
-    "alumni", "alumni-list", "alumni-story", "alumni-verification","notification",
+    "student", "student-add", "student-list", "student-left", "passout-student-list",
+    "campaign", "campaign-add", "campaign-list", "campaign-highlight", "campaign-donation", "campaign-past",
+    "alumni", "alumni-list", "alumni-story", "alumni-verification", "notification",
     "settings",
   ]),
-  "role-hod": new Set([
-    "dashboard", "student", "student-list", "student-left","passout-student-list",
-  ]),
-  "role-authorized": new Set(["dashboard", "student", "student-list"]),
+  "role-contact": new Set(["dashboard", "student-list", "student-left", "passout-student-list"]),
   "role-faculty": new Set(["dashboard", "campaign", "campaign-list"]),
   "role-student": new Set(["dashboard"]),
 };
 
-// Only Admin and HOD have working logins for now.
-// Add more entries here later (authorized_person, faculty, student) when needed.
+// Only Admin and Contact Person have working logins for now.
+// Add more entries here later (faculty, student) when needed — just add a
+// user with a `password` field; lib/auth.ts derives its login map from
+// this array automatically, no second credentials list to keep in sync.
 export const mockUsers: DashboardUser[] = [
   {
     id: "user-1",
     name: "John Doe",
     email: "admin@example.com",
+    password: "admin123",
     avatarUrl: undefined,
     role: mockRoles.find((r) => r.id === "role-admin")!,
   },
@@ -39,17 +39,12 @@ export const mockUsers: DashboardUser[] = [
     id: "user-2",
     name: "Hari Bahadur Thapa",
     email: "hod@example.com",
+    password: "hod123",
     avatarUrl: undefined,
-    role: mockRoles.find((r) => r.id === "role-hod")!,
+    role: mockRoles.find((r) => r.id === "role-contact")!,
+    assignedFaculty: "BICTE",
   },
 ];
-
-// email -> password + which mockUsers entry it logs into.
-// Swap this out for real (hashed) password lookups against a database later.
-export const mockCredentials: Record<string, { password: string; userId: string }> = {
-  "admin@example.com": { password: "admin123", userId: "user-1" },
-  "hod@example.com": { password: "hod123", userId: "user-2" },
-};
 
 // Fallback user used only when no login cookie is present yet.
 // Once someone actually logs in via /login, the session cookie (see lib/auth.ts) takes over.
