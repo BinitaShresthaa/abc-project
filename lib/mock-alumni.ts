@@ -29,3 +29,23 @@ export const mockAlumni: Alumni[] = [
   { id: "11", regNo: "REG-2019-056", name: "gsdg Rana", gender: "Male", email: "svsdfvssz.r@example.com", contact: "+977-9891000066", currentJob: "Civil Engineer, DUDBC", faculty: "B.Ed Science", batch: "2019", passoutYear: "2023" },
   { id: "12", regNo: "REG-2019-087", name: "yukt Rana", gender: "Female", email: "zvzsf.r@example.com", contact: "+977-9891000066", currentJob: "Civil Engineer, DUDBC", faculty: "B.Ed Science", batch: "2019", passoutYear: "2023" },
 ];
+
+// Stand-in for "the logged-in alumni" until real alumni sessions are wired
+// up (see getCurrentAlumni() in lib/auth.ts) — swap every usage of this for
+// a real session lookup once that's in place.
+export const CURRENT_ALUMNI_ID = "1";
+
+// In-memory mock write: mutates the matching record directly (find()
+// returns a reference into the mockAlumni array, not a copy), so other
+// components reading mockAlumni in the same session see the update. This
+// does not persist across a server restart or reload — swap for a real
+// database write once one exists.
+export function updateAlumniProfile(
+  id: string,
+  updates: Partial<Pick<Alumni, "photo" | "contact" | "email" | "currentJob" | "address">>
+): Alumni | null {
+  const alumni = mockAlumni.find((a) => a.id === id);
+  if (!alumni) return null;
+  Object.assign(alumni, updates);
+  return alumni;
+}
