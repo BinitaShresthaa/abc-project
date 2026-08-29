@@ -1,33 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { createContact, type NewContactInput } from "@/lib/mock-contacts";
+import { createCampusAdmin, type NewCampusAdminInput } from "@/lib/mock-campus-admins";
 import type { Gender } from "@/lib/gender";
 import { validateName, validatePhone, validateEmail, validatePassword } from "@/lib/validation";
-import ContactFormFields from "@/components/dashboard/forms/ContactFormFields";
+import CampusAdminFormFields from "@/components/dashboard/forms/CampusAdminFormFields";
 import { useToast } from "@/lib/toast-context";
 
-const emptyForm: NewContactInput = {
-  name: "", gender: "" as Gender, email: "", contactNo: "", password: "", position: "", assignedFaculty: "", photo: undefined,
+const emptyForm: NewCampusAdminInput = {
+  name: "", gender: "" as Gender, email: "", contact: "", password: "", photo: undefined,
 };
 
-export default function ContactAddView() {
+export default function CampusAdminAddView() {
   const { showToast } = useToast();
-  const [form, setForm] = useState<NewContactInput>(emptyForm);
+  const [form, setForm] = useState<NewCampusAdminInput>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
 
-  function update<K extends keyof NewContactInput>(key: K, value: NewContactInput[K]) {
+  function update<K extends keyof NewCampusAdminInput>(key: K, value: NewCampusAdminInput[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   function runValidation(): string | null {
-    if (!form.assignedFaculty) return "Please select an assigned faculty.";
     if (!form.gender) return "Please select a gender.";
 
     const checks = [
       validateName(form.name, "Full name"),
       validateEmail(form.email),
-      validatePhone(form.contactNo, "Contact number"),
+      validatePhone(form.contact, "Contact number"),
       validatePassword(form.password),
     ];
     const failed = checks.find((c) => !c.valid);
@@ -45,7 +44,7 @@ export default function ContactAddView() {
 
     setSubmitting(true);
     try {
-      await createContact(form);
+      await createCampusAdmin(form);
       showToast("Added successfully");
       setForm(emptyForm);
     } catch (err) {
@@ -57,20 +56,20 @@ export default function ContactAddView() {
 
   return (
     <div className="max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-      <h2 className="text-base font-bold text-slate-800 dark:text-white">Add Contact Person</h2>
+      <h2 className="text-base font-bold text-slate-800 dark:text-white">Add Campus Administrator</h2>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        This person will be able to log in and view only the student list for their assigned faculty.
+        Campus Administrators have full dashboard access except managing other Campus Administrators.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-        <ContactFormFields form={form} update={update} />
+        <CampusAdminFormFields form={form} update={update} />
         <div className="flex items-center gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
           <button
             type="submit"
             disabled={submitting}
             className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {submitting ? "Saving..." : "Save Contact"}
+            {submitting ? "Saving..." : "Save Administrator"}
           </button>
           <button
             type="button"

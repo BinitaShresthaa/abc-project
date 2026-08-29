@@ -21,7 +21,7 @@ export interface TableFilter<T> {
 export interface RowAction<T> {
   label: string;
   onSelect: (row: T) => void;
-  variant?: "default" | "danger";
+  variant?: "default" | "danger" | "primary";
 }
 
 // One entry in the toolbar's bulk-action button, shown only when rows are selected.

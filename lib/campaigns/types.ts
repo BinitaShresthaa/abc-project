@@ -3,10 +3,6 @@ import type { ReactNode } from "react";
 export type CampaignStatus = "ACTIVE" | "UPCOMING" | "COMPLETED";
 
 export interface Campaign {
-  isHighlight: unknown;
-  category: ReactNode;
-  raised: any;
-  goal: any;
   id: string;
   slug: string;
   image: string;

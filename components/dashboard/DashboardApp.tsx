@@ -10,6 +10,7 @@ import DashboardHomeView from "./views/DashboardHomeView";
 import StudentEditView from "./views/StudentEditView";
 import CampaignEditView from "./views/CampaignEditView";
 import ContactEditView from "./views/ContactEditView";
+import CampusAdminEditView from "./views/CampusAdminEditView";
 import { DashboardUserProvider } from "@/lib/dashboard-user-context";
 import { ToastProvider } from "@/lib/toast-context";
 
@@ -35,6 +36,7 @@ type EditingState =
   | { type: "student"; id: string; returnKey: string }
   | { type: "campaign"; id: string; returnKey: string }
   | { type: "contact"; id: string; returnKey: string }
+  | { type: "campusAdmin"; id: string; returnKey: string }
   | null;
 
 export default function DashboardApp({ user, navItems }: { user: DashboardUser; navItems: NavItem[] }) {
@@ -60,6 +62,10 @@ export default function DashboardApp({ user, navItems }: { user: DashboardUser; 
     setEditing({ type: "contact", id: contactId, returnKey: activeKey });
   }
 
+  function openEditCampusAdmin(id: string) {
+    setEditing({ type: "campusAdmin", id, returnKey: activeKey });
+  }
+
   // THIS is the function that must be passed as `onDone` to every edit view.
   function closeEditing() {
     if (editing) setActiveKey(editing.returnKey);
@@ -74,7 +80,9 @@ export default function DashboardApp({ user, navItems }: { user: DashboardUser; 
       ? "Edit Student"
       : editing.type === "campaign"
       ? "Edit Campaign"
-      : "Edit Contact Person"
+      : editing.type === "contact"
+      ? "Edit Contact Person"
+      : "Edit Campus Administrator"
     : findLabel(navItems, safeKey);
 
   return (
@@ -88,15 +96,21 @@ export default function DashboardApp({ user, navItems }: { user: DashboardUser; 
               {editing?.type === "student" ? (
                 <StudentEditView studentId={editing.id} onDone={closeEditing} />
               ) : editing?.type === "campaign" ? (
-                <CampaignEditView campaignId={editing.id} onDone={closeEditing} />
+                <CampaignEditView
+                  campaignId={editing.id}
+                  {...({ onDone: closeEditing } as any)}
+                />
               ) : editing?.type === "contact" ? (
                 <ContactEditView contactId={editing.id} onDone={closeEditing} />
+              ) : editing?.type === "campusAdmin" ? (
+                <CampusAdminEditView campusAdminId={editing.id} onDone={closeEditing} />
               ) : (
                 <ActiveView
                   onNavigate={navigate}
                   onEditStudent={openEditStudent}
                   onEditCampaign={openEditCampaign}
                   onEditContact={openEditContact}
+                  onEditCampusAdmin={openEditCampusAdmin}
                   page={pageByView[safeKey] ?? 1}
                   onPageChange={(p: number) => setPageByView((prev) => ({ ...prev, [safeKey]: p }))}
                 />

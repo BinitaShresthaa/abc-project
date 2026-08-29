@@ -3,6 +3,7 @@ export interface DashboardViewProps {
   onEditStudent: (studentId: string) => void;
   onEditCampaign: (campaignId: string) => void;
   onEditContact: (contactId: string) => void;
+  onEditCampusAdmin: (campusAdminId: string) => void;
   page: number;
   onPageChange: (page: number) => void;
 }

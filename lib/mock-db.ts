@@ -2,6 +2,7 @@ import type { Role, DashboardUser } from "./roles";
 
 export const mockRoles: Role[] = [
   { id: "role-admin", name: "admin", label: "Administrator", isSystem: true },
+  { id: "role-campus-admin", name: "campus_admin", label: "Campus Administrator", isSystem: false },
   { id: "role-contact", name: "contact_person", label: "Contact Person", isSystem: false },
   { id: "role-faculty", name: "faculty", label: "Faculty", isSystem: false },
   { id: "role-student", name: "student", label: "Student", isSystem: false },
@@ -11,6 +12,17 @@ export const mockPermissions: Record<string, Set<string>> = {
   "role-admin": new Set([
     "dashboard",
     "campus-admin", "campus-admin-add", "campus-admin-list",
+    "contact", "contact-add", "contact-list",
+    "student", "student-add", "student-list", "student-left", "passout-student-list",
+    "campaign", "campaign-add", "campaign-list", "campaign-highlight", "campaign-donation", "campaign-past",
+    "alumni", "alumni-list", "alumni-story", "alumni-verification", "notification",
+    "settings",
+  ]),
+  // Campus Administrator: identical to Admin, MINUS the three campus-admin
+  // management keys — only the true system Admin can add/see/edit other
+  // Campus Administrators.
+  "role-campus-admin": new Set([
+    "dashboard",
     "contact", "contact-add", "contact-list",
     "student", "student-add", "student-list", "student-left", "passout-student-list",
     "campaign", "campaign-add", "campaign-list", "campaign-highlight", "campaign-donation", "campaign-past",

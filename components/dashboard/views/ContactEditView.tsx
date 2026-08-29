@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { getContactById, updateContact, type NewContactInput, type ContactPerson } from "@/lib/mock-contacts";
+import { validateName, validatePhone, validateEmail, validatePassword } from "@/lib/validation";
 import ContactFormFields from "@/components/dashboard/forms/ContactFormFields";
 import { useToast } from "@/lib/toast-context";
 
@@ -36,33 +37,48 @@ export default function ContactEditView({
   const originalForm = toFormInput(contact);
   const [form, setForm] = useState<NewContactInput>(originalForm);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   function update<K extends keyof NewContactInput>(key: K, value: NewContactInput[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  function runValidation(): string | null {
+    if (!form.assignedFaculty) return "Please select an assigned faculty.";
+    if (!form.gender) return "Please select a gender.";
+
+    const checks = [
+      validateName(form.name, "Full name"),
+      validateEmail(form.email),
+      validatePhone(form.contactNo, "Contact number"),
+      validatePassword(form.password),
+    ];
+    const failed = checks.find((c) => !c.valid);
+    return failed ? failed.message! : null;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-if (!form.name || !form.email || !form.assignedFaculty || !form.password || !form.gender) {      setError("Please fill in all required fields.");
+
+    const validationError = runValidation();
+    if (validationError) {
+      showToast(validationError, "error");
       return;
     }
+
     setSubmitting(true);
     try {
       await updateContact(contactId, form);
       setSubmitting(false);
       showToast("Updated successfully");
       onDone?.();
-    } catch {
+    } catch (err) {
       setSubmitting(false);
-      setError("Something went wrong while saving. Please try again.");
+      showToast(err instanceof Error ? err.message : "Something went wrong while saving.", "error");
     }
   }
 
   function handleReset() {
     setForm(originalForm);
-    setError(null);
   }
 
   return (
@@ -83,12 +99,6 @@ if (!form.name || !form.email || !form.assignedFaculty || !form.password || !for
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         Contact ID <span className="font-mono">{contact.contactId}</span>
       </p>
-
-      {error && (
-        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-500/10 dark:text-red-400">
-          {error}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-5">
         <ContactFormFields form={form} update={update} />

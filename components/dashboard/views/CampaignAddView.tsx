@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { facultyList } from "@/lib/faculty-data";
 import type { Campaign } from "@/lib/campaigns/types";
+import { clubList } from "@/lib/club-data";
 
 export default function CampaignAddView() {
     const [campaign, setCampaign] = useState<Campaign | null>(null);
@@ -61,12 +61,12 @@ export default function CampaignAddView() {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Faculty</label>
-            <select name="faculty" required defaultValue="" className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-              <option value="" disabled>Select faculty</option>
-              {facultyList.map((f) => (<option key={f} value={f}>{f}</option>))}
-            </select>
-          </div>
+  <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Club</label>
+  <select name="faculty" required defaultValue="" className="max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+    <option value="" disabled>Select club</option>
+    {clubList.map((c) => (<option key={c} value={c}>{c}</option>))}
+  </select>
+</div>
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Status</label>
             <select name="status" value={status} onChange={(e) => setStatus(e.target.value as "UPCOMING" | "ACTIVE")} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
