@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { facultyList } from "@/lib/faculty-data";
+import { clubList } from "@/lib/club-data";
 import type { Campaign } from "@/lib/campaigns/types";
 
 export default function CampaignEditView({ campaignId }: { campaignId: string }) {
@@ -65,11 +65,11 @@ export default function CampaignEditView({ campaignId }: { campaignId: string })
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Faculty</label>
-            <select name="faculty" defaultValue={campaign.faculty} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-              {facultyList.map((f) => (<option key={f} value={f}>{f}</option>))}
-            </select>
-          </div>
+  <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Club</label>
+  <select name="faculty" defaultValue={campaign.faculty} className="max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+    {clubList.map((c) => (<option key={c} value={c}>{c}</option>))}
+  </select>
+</div>
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Status</label>
             <select name="status" defaultValue={campaign.status} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">

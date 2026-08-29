@@ -12,6 +12,10 @@ import CampaignHighlightView from "./CampaignHighlightView";
 import CampaignPastView from "./CampaignPastView";
 import ContactListView from "./ContactListView";
 import ContactAddView from "./ContactAddView";
+import CampusAdminListView from "./CampusAdminListView";
+// registry.tsx imports it as a default export:
+import CampusAdminAddView from "./CampusAdminAddView";
+import NotificationListView from "./NotificationListView";
 
 // Add one line here per view. The key must match a `key` in lib/nav-config.ts.
 export const viewRegistry: Record<string, ComponentType<Partial<DashboardViewProps>>> = {
@@ -27,4 +31,8 @@ export const viewRegistry: Record<string, ComponentType<Partial<DashboardViewPro
 "campaign-past": CampaignPastView,
  "contact-list": ContactListView,
   "contact-add": ContactAddView,
+  "campus-admin-list": CampusAdminListView,
+  "campus-admin-add": CampusAdminAddView,
+    "notification": NotificationListView,
+
 };

@@ -21,3 +21,12 @@ export async function requireAlumni(): Promise<Alumni> {
   if (!alumni) redirect("/almuni/almuni-login");
   return alumni;
 }
+// in requirePermission, or add a dedicated check used inside
+// CampusAdminAddView/CampusAdminEditView pages if they ever become real
+// server routes:
+export async function requireNotCampusAdmin(): Promise<DashboardUser> {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (user.role.name === "campus_admin") redirect("/dashboard");
+  return user;
+}

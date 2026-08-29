@@ -1,68 +1,56 @@
 "use client";
 
 import { useState } from "react";
-import { getStudentById, updateStudent, type NewStudentInput, type Student } from "@/lib/mock-students";
-import { getFacultyLevel } from "@/lib/faculty-data";
-import { validateName, validatePhone, validateEmail, validateDob } from "@/lib/validation";
-import StudentFormFields from "@/components/dashboard/forms/StudentFormFields";
+import { getCampusAdminById, updateCampusAdmin, type NewCampusAdminInput, type CampusAdmin } from "@/lib/mock-campus-admins";
+import { validateName, validatePhone, validateEmail, validatePassword } from "@/lib/validation";
+import CampusAdminFormFields from "@/components/dashboard/forms/CampusAdminFormFields";
 import { useToast } from "@/lib/toast-context";
 
-function toFormInput(student: Student): NewStudentInput {
-  const { name, gender, contact, email, dob, address, guardianName, guardianContact, faculty, progress, photo } = student;
-  return { name, gender, contact, email, dob, address, guardianName, guardianContact, faculty, progress, photo };
+function toFormInput(a: CampusAdmin): NewCampusAdminInput {
+  const { name, gender, email, contact, password, photo } = a;
+  return { name, gender, email, contact, password, photo };
 }
 
-export default function StudentEditView({
-  studentId,
+export default function CampusAdminEditView({
+  campusAdminId,
   onDone,
 }: {
-  studentId: string;
+  campusAdminId: string;
   onDone?: () => void;
 }) {
   const { showToast } = useToast();
+  const admin = getCampusAdminById(campusAdminId);
 
-  const student = getStudentById(studentId);
-
-  const [form, setForm] = useState<NewStudentInput>(() =>
-    student ? toFormInput(student) : ({} as NewStudentInput)
-  );
-  const [submitting, setSubmitting] = useState(false);
-
-  if (!student) {
+  if (!admin) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
-        Student not found. It may have been removed.
+        Campus Administrator not found. They may have been removed.
+        {onDone && (
+          <button onClick={onDone} className="mt-3 block text-sm font-medium text-primary hover:underline">
+            ← Back
+          </button>
+        )}
       </div>
     );
   }
 
-  const originalForm = toFormInput(student);
-  const level = form.faculty ? getFacultyLevel(form.faculty) : "bachelor";
+  const originalForm = toFormInput(admin);
+  const [form, setForm] = useState<NewCampusAdminInput>(originalForm);
+  const [submitting, setSubmitting] = useState(false);
 
-  function update<K extends keyof NewStudentInput>(key: K, value: NewStudentInput[K]) {
+  function update<K extends keyof NewCampusAdminInput>(key: K, value: NewCampusAdminInput[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function handleFacultyChange(faculty: string) {
-    setForm((prev) => {
-      const changedLevel = getFacultyLevel(faculty) !== getFacultyLevel(prev.faculty || faculty);
-      return { ...prev, faculty, progress: changedLevel ? { mode: "year", value: 1 } : prev.progress };
-    });
-  }
-
   function runValidation(): string | null {
-    if (!form.faculty) return "Please select a faculty.";
     if (!form.gender) return "Please select a gender.";
 
     const checks = [
       validateName(form.name, "Full name"),
-      validatePhone(form.contact, "Contact number"),
       validateEmail(form.email),
-      validateDob(form.dob),
+      validatePhone(form.contact, "Contact number"),
+      validatePassword(form.password),
     ];
-    if (form.guardianName) checks.push(validateName(form.guardianName, "Guardian name"));
-    if (form.guardianContact) checks.push(validatePhone(form.guardianContact, "Guardian number"));
-
     const failed = checks.find((c) => !c.valid);
     return failed ? failed.message! : null;
   }
@@ -78,7 +66,7 @@ export default function StudentEditView({
 
     setSubmitting(true);
     try {
-      await updateStudent(studentId, form);
+      await updateCampusAdmin(campusAdminId, form);
       setSubmitting(false);
       showToast("Updated successfully");
       onDone?.();
@@ -105,20 +93,21 @@ export default function StudentEditView({
           Back
         </button>
       )}
-      <h2 className="text-base font-bold text-slate-800 dark:text-white">Edit Student</h2>
+
+      <h2 className="text-base font-bold text-slate-800 dark:text-white">Edit Campus Administrator</h2>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        Registration No. <span className="font-mono">{student.regNo}</span> — batch and status are not editable here.
+        ID <span className="font-mono">{admin.campusAdminId}</span>
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-        <StudentFormFields form={form} update={update} level={level} onFacultyChange={handleFacultyChange} />
+        <CampusAdminFormFields form={form} update={update} />
         <div className="flex items-center gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
           <button
             type="submit"
             disabled={submitting}
             className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {submitting ? "Updating..." : "Update Student"}
+            {submitting ? "Updating..." : "Update Administrator"}
           </button>
           <button
             type="button"

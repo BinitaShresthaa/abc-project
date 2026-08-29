@@ -55,8 +55,13 @@ export const mockContacts: ContactPerson[] = [
 
 function generateContactId(): string {
   const year = new Date().getFullYear();
-  const count = mockContacts.length + 1;
-  return `CNT-${year}-${String(count).padStart(3, "0")}`;
+  let count = mockContacts.length + 1;
+  let candidate = `CNT-${year}-${String(count).padStart(3, "0")}`;
+  while (mockContacts.some((c) => c.contactId === candidate)) {
+    count++;
+    candidate = `CNT-${year}-${String(count).padStart(3, "0")}`;
+  }
+  return candidate;
 }
 
 export interface NewContactInput {
@@ -89,4 +94,10 @@ export async function updateContact(id: string, input: NewContactInput): Promise
   if (!contact) return undefined;
   Object.assign(contact, input);
   return contact;
+}
+function assertUniqueContactEmail(email: string, excludeId?: string) {
+  const clash = mockContacts.find(
+    (c) => c.email.trim().toLowerCase() === email.trim().toLowerCase() && c.id !== excludeId
+  );
+  if (clash) throw new Error(`Email "${email}" is already used by another contact.`);
 }

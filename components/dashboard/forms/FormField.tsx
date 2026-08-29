@@ -1,15 +1,18 @@
 import type { ReactNode } from "react";
+import FieldError from "./FieldError";
 
 export default function FormField({
   label,
   required,
   children,
   hint,
+  error,
 }: {
   label: string;
   required?: boolean;
   children: ReactNode;
   hint?: string;
+  error?: string;
 }) {
   return (
     <div>
@@ -18,7 +21,8 @@ export default function FormField({
         {required && <span className="ml-0.5 text-red-500">*</span>}
       </label>
       {children}
-      {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
+      <FieldError message={error} />
+      {hint && !error && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
     </div>
   );
 }

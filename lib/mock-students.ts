@@ -60,11 +60,15 @@ export function setStudentStatus(id: string, status: StudentStatus) {
 // Replace with your real numbering scheme (or a DB auto-increment) later.
 function generateRegNo(faculty: string): string {
   const year = new Date().getFullYear();
-  const countThisYear = mockStudents.filter((s) => s.batch === String(year)).length + 1;
   const prefix = getFacultyLevel(faculty) === "master" ? "STU-M" : "STU";
-  return `${prefix}-${year}-${String(countThisYear).padStart(3, "0")}`;
+  let count = mockStudents.filter((s) => s.batch === String(year)).length + 1;
+  let candidate = `${prefix}-${year}-${String(count).padStart(3, "0")}`;
+  while (mockStudents.some((s) => s.regNo === candidate)) {
+    count++;
+    candidate = `${prefix}-${year}-${String(count).padStart(3, "0")}`;
+  }
+  return candidate;
 }
-
 export interface NewStudentInput {
   name: string;
   gender: Gender;
@@ -106,4 +110,10 @@ export async function updateStudent(id: string, input: NewStudentInput): Promise
   // those are system-assigned, not editable fields on this form.
   Object.assign(student, input);
   return student;
+}
+function assertUniqueStudentEmail(email: string, excludeId?: string) {
+  const clash = mockStudents.find(
+    (s) => s.email.trim().toLowerCase() === email.trim().toLowerCase() && s.id !== excludeId
+  );
+  if (clash) throw new Error(`Email "${email}" is already used by another student.`);
 }

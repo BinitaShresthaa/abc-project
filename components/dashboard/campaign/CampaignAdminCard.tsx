@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Trash2, Sparkles } from "lucide-react";
+import { Pencil, Trash2, Sparkles, Images } from "lucide-react";
 import type { Campaign } from "@/lib/campaigns/types";
 
 export default function CampaignAdminCard({
@@ -10,6 +10,7 @@ export default function CampaignAdminCard({
   onEdit,
   onDelete,
   onHighlight,
+  onManagePhotos,
 }: {
   campaign: Campaign;
   variant?: "list" | "past";
@@ -17,6 +18,7 @@ export default function CampaignAdminCard({
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   onHighlight?: (campaign: Campaign) => void;
+  onManagePhotos?: (campaign: Campaign) => void;
 }) {
   function handleDelete() {
     if (!confirm(`Delete "${campaign.title}"? This cannot be undone.`)) return;
@@ -56,6 +58,11 @@ export default function CampaignAdminCard({
           >
             <Sparkles size={13} /> {isHighlighted ? "Highlighted" : "Highlight"}
           </button>
+          {isHighlighted && onManagePhotos && (
+            <button type="button" onClick={() => onManagePhotos(campaign)} aria-label="Manage highlight photos" className="flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+              <Images size={14} />
+            </button>
+          )}
           {variant === "list" && (
             <button type="button" onClick={handleDelete} aria-label="Delete campaign" className="flex items-center justify-center rounded-lg border border-red-100 px-3 py-2 text-red-500 hover:bg-red-50 dark:border-red-900/40 dark:hover:bg-red-950/30">
               <Trash2 size={14} />

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import type { DashboardUser } from "@/lib/roles";
+import NotificationBell from "./NotificationBell";
+
 
 export default function Topbar({ title, user }: { title: string; user: DashboardUser }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -45,13 +47,7 @@ export default function Topbar({ title, user }: { title: string; user: Dashboard
           )}
         </button>
 
-        <button aria-label="Notifications" className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
-        </button>
+        <NotificationBell />
 
         <div className="relative">
           <button onClick={() => setMenuOpen((v) => !v)} className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800">

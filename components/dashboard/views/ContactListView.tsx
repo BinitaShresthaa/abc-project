@@ -10,8 +10,8 @@ import type { DashboardViewProps } from "@/lib/view-types";
 export default function ContactListView({ onEditContact }: Partial<DashboardViewProps>) {
   type ContactRow = ContactPerson & Record<string, unknown>;
 
-  const rowActions: RowAction<ContactRow>[] = [
-    { label: "Edit", onSelect: (r) => onEditContact?.(r.id) },
+   const rowActions: RowAction<ContactPerson>[] = [
+    { label: "Edit", onSelect: (r) => onEditContact?.(r.id), variant: "default" },
   ];
 
   return (

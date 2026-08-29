@@ -3,16 +3,17 @@ import { getCampaignById, updateCampaign, deleteCampaign } from "@/lib/campaigns
 import { fileToDataUrl } from "@/lib/campaigns/file-to-data-url-server";
 import type { CampaignStatus } from "@/lib/campaigns/types";
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const formData = await req.formData();
-  const existing = await getCampaignById(params.id);
+  const existing = await getCampaignById(id);
   if (!existing) return NextResponse.json({ error: "Campaign not found." }, { status: 404 });
 
   const imageFile = formData.get("image");
   const image = imageFile instanceof File && imageFile.size > 0 ? await fileToDataUrl(imageFile) : existing.image;
 
   try {
-    const campaign = await updateCampaign(params.id, {
+    const campaign = await updateCampaign(id, {
       title: String(formData.get("title") || existing.title),
       faculty: String(formData.get("faculty") || existing.faculty),
       status: (formData.get("status") as CampaignStatus) || existing.status,
@@ -28,7 +29,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
-  await deleteCampaign(params.id);
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  await deleteCampaign(id);
   return NextResponse.json({ ok: true });
 }

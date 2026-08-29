@@ -1,20 +1,25 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
+import { createFeedbackNotification } from "@/lib/mock-notifications";
 
 export default function FeedbackForm() {
-  const [submitted, setSubmitted] = useState(false);
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // TODO: wire this up to your API route / email service.
-    console.log({ email, message });
+    createFeedbackNotification(email, message);
     setSubmitted(true);
     setEmail("");
     setMessage("");
   }
+
+  // ...keep all your existing JSX exactly as-is, just make sure the
+  // <form onSubmit={handleSubmit}> and the two inputs are wired to
+  // `email`/`setEmail` and `message`/`setMessage` above, and show
+  // `submitted` as a success state under the button if you'd like one.
 
   return (
     <div className="grid overflow-hidden rounded-2xl border border-slate-200 shadow-sm lg:grid-cols-[0.85fr_1.15fr]">

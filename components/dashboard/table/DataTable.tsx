@@ -8,8 +8,7 @@ import { downloadCsv, downloadExcel, downloadPdf, downloadWord, printRows } from
 
 type ExportFormat = "csv" | "excel" | "pdf" | "word";
 const PAGE_SIZE = 10;
-export default function DataTable<T extends Record<string, unknown>>({
-  title,
+export default function DataTable<T extends object>({  title,
   data,
   columns,
   filters = [],

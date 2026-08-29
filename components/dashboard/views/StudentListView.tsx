@@ -9,6 +9,8 @@ import type { RowAction, BulkAction } from "@/components/dashboard/table/types";
 import type { DashboardViewProps } from "@/lib/view-types";
 import { useDashboardUser } from "@/lib/dashboard-user-context";
 import { isContactPerson } from "@/lib/permissions-helpers";
+import { sortByName } from "@/lib/sort-utils";
+
 
 export default function StudentListView({ onEditStudent, page, onPageChange }: Partial<DashboardViewProps>) {
   const [, forceRefresh] = useState(0);
@@ -26,10 +28,10 @@ export default function StudentListView({ onEditStudent, page, onPageChange }: P
     forceRefresh((n) => n + 1);
   }
 
-  const rowActions: RowAction<Student>[] = restricted
+   const rowActions: RowAction<Student>[] = restricted
     ? []
     : [
-        { label: "Edit", onSelect: (r) => onEditStudent?.(r.id) },
+    { label: "Edit", onSelect: (r) => onEditStudent?.(r.id), variant: "default" },
         { label: "Mark as Left", onSelect: (r) => handleStatusChange(r, "left") },
         { label: "Mark as Passout", onSelect: (r) => handleStatusChange(r, "passout") },
       ];
@@ -50,8 +52,8 @@ export default function StudentListView({ onEditStudent, page, onPageChange }: P
   return (
     <DataTable<Student & Record<string, unknown>>
       title={restricted ? `Student List — ${user.assignedFaculty}` : "Student List"}
-      data={activeStudents as (Student & Record<string, unknown>)[]}
-      columns={studentColumns}
+      data={sortByName(activeStudents).map((student) => ({ ...student }))}
+  columns={studentColumns}
       filters={studentFilters}
       rowIdKey="id"
       rowActions={rowActions}

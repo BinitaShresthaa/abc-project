@@ -6,6 +6,8 @@ import DataTable from "@/components/dashboard/table/DataTable";
 import type { Student } from "@/lib/mock-students";
 import { useDashboardUser } from "@/lib/dashboard-user-context";
 import { isContactPerson } from "@/lib/permissions-helpers";
+import { sortByName } from "@/lib/sort-utils";
+
 
 export default function PassoutStudentListView() {
   const user = useDashboardUser();
@@ -20,7 +22,7 @@ export default function PassoutStudentListView() {
   return (
     <DataTable<Student & Record<string, unknown>>
       title={restricted ? `Passout Students — ${user.assignedFaculty}` : "Passout Students"}
-      data={passoutStudents as Array<Student & Record<string, unknown>>}
+      data={sortByName(passoutStudents) as Array<Student & Record<string, unknown>>}
       columns={passoutStudentColumns}
       filters={passoutStudentFilters}
       rowIdKey="id"

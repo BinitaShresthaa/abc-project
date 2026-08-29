@@ -14,6 +14,7 @@ export default function CampaignCardGrid({
   onEdit,
   onDelete,
   onHighlight,
+  onManagePhotos,
 }: {
   campaigns: Campaign[];
   variant?: "list" | "past";
@@ -22,6 +23,7 @@ export default function CampaignCardGrid({
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   onHighlight?: (campaign: Campaign) => void;
+  onManagePhotos?: (campaign: Campaign) => void;
 }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -79,6 +81,7 @@ export default function CampaignCardGrid({
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onHighlight={onHighlight}
+                onManagePhotos={onManagePhotos}
               />
             ))}
           </div>

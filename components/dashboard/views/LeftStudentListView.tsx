@@ -6,6 +6,7 @@ import DataTable from "@/components/dashboard/table/DataTable";
 import type { Student } from "@/lib/mock-students";
 import { useDashboardUser } from "@/lib/dashboard-user-context";
 import { isContactPerson } from "@/lib/permissions-helpers";
+import { sortByName } from "@/lib/sort-utils";
 
 export default function LeftStudentListView() {
   const user = useDashboardUser();
@@ -22,7 +23,7 @@ export default function LeftStudentListView() {
   return (
     <DataTable<TableStudent>
       title={restricted ? `Left Students — ${user.assignedFaculty}` : "Left Students"}
-      data={leftStudents as TableStudent[]}
+      data={sortByName(leftStudents) as TableStudent[]}
       columns={leftStudentColumns as typeof leftStudentColumns & never}
       filters={leftStudentFilters}
       rowIdKey="id"

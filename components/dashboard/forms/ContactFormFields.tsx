@@ -1,10 +1,10 @@
 import { facultyList } from "@/lib/faculty-data";
 import type { NewContactInput } from "@/lib/mock-contacts";
+import { validateName, validatePhone, validateEmail } from "@/lib/validation";
 import FormField from "./FormField";
 import PhotoUploadField from "./PhotoUploadField";
 import PasswordField from "./PasswordField";
 import { inputClass } from "./StudentFormFields";
-import GenderSelect from "./GenderSelect";
 
 export default function ContactFormFields({
   form,
@@ -13,6 +13,10 @@ export default function ContactFormFields({
   form: NewContactInput;
   update: <K extends keyof NewContactInput>(key: K, value: NewContactInput[K]) => void;
 }) {
+  const nameError = form.name && !validateName(form.name, "Full name").valid ? validateName(form.name, "Full name").message : undefined;
+  const emailError = form.email && !validateEmail(form.email).valid ? validateEmail(form.email).message : undefined;
+  const contactError = form.contactNo && !validatePhone(form.contactNo, "Contact number").valid ? validatePhone(form.contactNo, "Contact number").message : undefined;
+
   return (
     <>
       <FormField label="Photo">
@@ -20,7 +24,7 @@ export default function ContactFormFields({
       </FormField>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <FormField label="Full Name" required>
+        <FormField label="Full Name" required error={nameError}>
           <input value={form.name} onChange={(e) => update("name", e.target.value)} className={inputClass} />
         </FormField>
 
@@ -32,19 +36,17 @@ export default function ContactFormFields({
             ))}
           </select>
         </FormField>
-<FormField label="Gender" required>
-  <GenderSelect value={form.gender} onChange={(g) => update("gender", g)} />
-</FormField>
-        <FormField label="Email" required>
+
+        <FormField label="Email" required error={emailError}>
           <input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} className={inputClass} />
         </FormField>
 
-        <FormField label="Contact No." required>
+        <FormField label="Contact No." required error={contactError}>
           <input value={form.contactNo} onChange={(e) => update("contactNo", e.target.value)} className={inputClass} />
         </FormField>
 
         <FormField label="Password" required hint="Stored in plain text only because there's no backend yet — must be hashed once one exists.">
-          <PasswordField value={form.password} onChange={(v) => update("password", v)} />
+          <PasswordField value={form.password} onChange={(v) => update("password", v)} showRequirements />
         </FormField>
 
         <FormField label="Position">

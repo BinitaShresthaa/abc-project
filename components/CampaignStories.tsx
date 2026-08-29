@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Clock, Heart } from "lucide-react";
+import { Clock } from "lucide-react";
 import type { Campaign } from "@/lib/campaigns/types";
 
 export interface HighlightEntry {
@@ -59,10 +59,9 @@ export default function CampaignStories({ entries, onOpen }: { entries: Highligh
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-white ${campaign.status === "ACTIVE" ? "bg-[#0E76BD]" : "bg-gray-700"}`}>{campaign.status}</span>
-              {campaign.status !== "COMPLETED" && (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white shadow-lg"><Heart size={15} fill="currentColor" /></div>
-              )}
+<span className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-white ${campaign.status === "ACTIVE" ? "bg-[#0E76BD]" : "bg-gray-500/80"}`}>
+  {campaign.status === "ACTIVE" ? "Active" : "Past"}
+</span>
             </div>
           </div>
 
