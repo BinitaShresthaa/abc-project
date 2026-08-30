@@ -12,6 +12,7 @@ interface TopbarProps {
   onChange?: (key: NavKey) => void;
   onSetProfile?: () => void;
   onChangePassword?: () => void;
+  onViewProfile?: () => void;
 }
 
 const chevronDownIcon = (
@@ -20,7 +21,7 @@ const chevronDownIcon = (
   </svg>
 );
 
-export default function Topbar({ onSetProfile, onChangePassword }: TopbarProps) {
+export default function Topbar({ onSetProfile, onChangePassword, onViewProfile }: TopbarProps) {
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -76,7 +77,10 @@ export default function Topbar({ onSetProfile, onChangePassword }: TopbarProps) 
 
           {profileOpen && (
             <ProfileMenu
-              onViewProfile={() => console.log('View Profile')}
+              onViewProfile={() => {
+                setProfileOpen(false);
+                onViewProfile?.();
+              }}
               onSetProfile={() => {
                 setProfileOpen(false);
                 onSetProfile?.();

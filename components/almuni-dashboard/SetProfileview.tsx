@@ -2,6 +2,7 @@
 
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { mockAlumni, CURRENT_ALUMNI_ID, updateAlumniProfile } from '@/lib/mock-alumni';
+import { arrowLeftIcon } from './icons';
 
 const avatarPlaceholderIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-9 h-9">
@@ -15,7 +16,7 @@ const inputClass =
 
 const labelClass = 'block text-[13px] font-semibold text-[#241B3A] mb-1.5';
 
-export default function SetProfileView() {
+export default function SetProfileView({ onClose }: { onClose?: () => void }) {
   // Stand-in for "the logged-in alumni" until real alumni sessions are wired
   // up (see getCurrentAlumni() in lib/auth.ts) — swap this lookup out then.
   const currentAlumni = mockAlumni.find((a) => a.id === CURRENT_ALUMNI_ID) ?? mockAlumni[0];
@@ -49,11 +50,21 @@ export default function SetProfileView() {
 
   return (
     <div className="bg-white rounded-2xl border border-black/5 shadow-[0_1px_3px_rgba(11,90,147,0.06)]">
-      <div className="px-5 py-4 border-b border-black/5">
-        <h2 className="text-[22px] font-bold text-[#241B3A]">Set Profile</h2>
-        <p className="text-[13px] text-[#8B87A3] mt-1">
-          Update your profile photo and contact details.
-        </p>
+      <div className="flex items-center gap-3 px-5 py-4 border-b border-black/5">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Back"
+          className="w-9 h-9 rounded-full border-[1.5px] border-[#0E76BD] text-[#0E76BD] flex items-center justify-center hover:bg-[#EAF4FB] transition-colors shrink-0"
+        >
+          {arrowLeftIcon}
+        </button>
+        <div>
+          <h2 className="text-[22px] font-bold text-[#241B3A]">Set Profile</h2>
+          <p className="text-[13px] text-[#8B87A3] mt-1">
+            Update your profile photo and contact details.
+          </p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="p-5 max-w-xl">

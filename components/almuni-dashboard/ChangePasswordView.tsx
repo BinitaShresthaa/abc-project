@@ -1,13 +1,61 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { lockIcon, eyeIcon, arrowLeftIcon } from './icons';
 
-const inputClass =
-  'w-full rounded-xl bg-[#F0F2F5] px-4 py-2.5 text-sm text-[#241B3A] placeholder-[#8B87A3] outline-none border border-transparent focus:bg-white focus:border-[#A9D4EF] transition-colors';
+function PasswordInput({
+  label,
+  placeholder,
+  value,
+  onChange,
+  autoFocus,
+  error,
+  helper,
+}: {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+  autoFocus?: boolean;
+  error?: string;
+  helper?: string;
+}) {
+  const [show, setShow] = useState(false);
 
-const labelClass = 'block text-[13px] font-semibold text-[#241B3A] mb-1.5';
+  return (
+    <div>
+      <label className="block text-[13px] font-semibold text-[#241B3A] mb-1.5">{label}</label>
+      <div className="relative">
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#0E76BD]">{lockIcon}</span>
+        <input
+          type={show ? 'text' : 'password'}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoFocus={autoFocus}
+          className="w-full rounded-full bg-[#F5F4FB] pl-11 pr-11 py-3 text-sm text-[#241B3A]
+                     placeholder-[#8B87A3] outline-none border border-transparent
+                     focus:bg-[#EAF4FB] focus:border-[#A9D4EF] transition-colors"
+        />
+        <button
+          type="button"
+          onClick={() => setShow((v) => !v)}
+          aria-label={show ? 'Hide password' : 'Show password'}
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8B87A3] hover:text-[#0E76BD] transition-colors"
+        >
+          {eyeIcon}
+        </button>
+      </div>
+      {error ? (
+        <p className="text-[12px] text-red-500 mt-1.5 ml-1">{error}</p>
+      ) : helper ? (
+        <p className="text-[12px] text-[#8B87A3] mt-1.5 ml-1">{helper}</p>
+      ) : null}
+    </div>
+  );
+}
 
-export default function ChangePasswordView() {
+export default function ChangePasswordView({ onClose }: { onClose?: () => void }) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -36,59 +84,62 @@ export default function ChangePasswordView() {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-black/5 shadow-[0_1px_3px_rgba(11,90,147,0.06)]">
-      <div className="px-5 py-4 border-b border-black/5">
-        <h2 className="text-[22px] font-bold text-[#241B3A]">Change Password</h2>
-        <p className="text-[13px] text-[#8B87A3] mt-1">
-          Update the password used to sign in to your account.
-        </p>
+    <div className="max-w-xl mx-auto bg-white rounded-2xl border border-black/5 shadow-[0_1px_3px_rgba(11,90,147,0.06)]">
+      <div className="flex items-center gap-3 px-8 py-6 border-b border-black/5">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Back"
+          className="w-9 h-9 rounded-full border-[1.5px] border-[#0E76BD] text-[#0E76BD] flex items-center justify-center hover:bg-[#EAF4FB] transition-colors shrink-0"
+        >
+          {arrowLeftIcon}
+        </button>
+        <div>
+          <h2 className="text-[22px] font-bold text-[#241B3A]">Change Password</h2>
+          <p className="text-[13px] text-[#8B87A3] mt-1">
+            Update the password used to sign in to your account.
+          </p>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-5 max-w-xl">
-        <div className="mb-4">
-          <label className={labelClass}>Current Password</label>
-          <input
-            type="password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            className={inputClass}
+      <form onSubmit={handleSubmit} className="px-8 py-8">
+        <div className="space-y-6 mb-2">
+          <PasswordInput
+            label="Current Password"
             placeholder="Enter current password"
+            value={currentPassword}
+            onChange={setCurrentPassword}
+            autoFocus
+            helper="Enter the password you currently use to sign in."
           />
-        </div>
-
-        <div className="mb-4">
-          <label className={labelClass}>New Password</label>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className={inputClass}
+          <PasswordInput
+            label="New Password"
             placeholder="Enter new password"
+            value={newPassword}
+            onChange={setNewPassword}
+            error={tooShort ? 'Password must be at least 6 characters.' : undefined}
+            helper={!tooShort ? 'Use at least 6 characters.' : undefined}
           />
-          {tooShort && (
-            <p className="text-[12px] text-red-500 mt-1.5">Password must be at least 6 characters.</p>
-          )}
-        </div>
-
-        <div className="mb-6">
-          <label className={labelClass}>Confirm New Password</label>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className={inputClass}
+          <PasswordInput
+            label="Confirm New Password"
             placeholder="Re-enter new password"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            error={mismatch ? 'Passwords do not match.' : undefined}
+            helper={!mismatch ? 'Re-enter your new password to confirm.' : undefined}
           />
-          {mismatch && (
-            <p className="text-[12px] text-red-500 mt-1.5">Passwords do not match.</p>
-          )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mt-6">
           <button
             type="submit"
             disabled={!canSubmit}
-            className="px-5 py-2.5 rounded-full bg-[#0E76BD] text-white text-sm font-semibold hover:bg-[#0b5f99] disabled:opacity-40 disabled:hover:bg-[#0E76BD] transition-colors"
+            className="px-6 py-3 rounded-full bg-[linear-gradient(120deg,#0E76BD,#0B5A93)] text-white
+                       text-[13px] font-semibold uppercase tracking-[1px]
+                       shadow-[0_10px_22px_rgba(14,118,189,0.3)]
+                       hover:shadow-[0_14px_28px_rgba(14,118,189,0.4)] hover:-translate-y-0.5
+                       disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:shadow-[0_10px_22px_rgba(14,118,189,0.3)]
+                       transition-all"
           >
             Update Password
           </button>

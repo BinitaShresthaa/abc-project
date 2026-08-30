@@ -32,11 +32,13 @@ export default function LoginPage() {
     <AuthCard
       panelSide="left"
       fontClassName={quicksand.className}
+      backHref="/"
       branding={
         <BrandPanel
           showLogo
           heading="Welcome Back!"
           description="Enter your personal details to use all of the site's features."
+          cta={{ label: 'Join as Alumni', href: '/almuni/almuni-login' }}
         />
       }
     >

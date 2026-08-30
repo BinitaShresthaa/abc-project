@@ -33,12 +33,13 @@ export default function AlmuniLoginPage() {
     <AuthCard
       panelSide="left"
       fontClassName={quicksand.className}
+      backHref="/"
       branding={
         <BrandPanel
           showLogo
           heading="Welcome Back!"
           description="Enter your personal details to use all of the site's features."
-          cta={{ label: 'Create Account', href: '/almuni/almuni-register' }}
+          cta={{ label: 'Connect As Alumni', href: '/almuni/almuni-register' }}
         />
       }
     >
