@@ -63,7 +63,7 @@ export default function ProfileView({
       </button>
 
       {/* header — plain solid blue box, flush white strip at the bottom */}
-      <div className="rounded-2xl bg-[#0E76BD] shadow-[0_6px_18px_rgba(14,118,189,0.25)]">
+      <div className="rounded-2xl bg-[#0E76BD] overflow-hidden shadow-[0_6px_18px_rgba(14,118,189,0.25)]">
         <div className="flex items-center gap-4 flex-wrap px-5 pt-5 pb-4">
           <div className="w-20 h-20 rounded-full overflow-hidden bg-white flex items-center justify-center shrink-0">
             {alumni.photo ? (
@@ -106,7 +106,7 @@ export default function ProfileView({
         {/* explicit rounded-b-2xl on the strip itself — same proven technique
             used on StoryCard's bottom, rather than relying on the parent to
             clip it, which wasn't rendering the curve reliably. */}
-        <div className="bg-white rounded-b-2xl h-2" />
+        <div className="bg-white rounded-b-2xl h-2.5" />
       </div>
 
       {/* two-column body */}

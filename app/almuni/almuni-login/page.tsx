@@ -31,7 +31,7 @@ export default function AlmuniLoginPage() {
 
   return (
     <AuthCard
-      panelSide="left"
+      panelSide="right"
       fontClassName={quicksand.className}
       backHref="/"
       branding={
