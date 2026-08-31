@@ -100,7 +100,7 @@ export default function CampusAdminEditView({
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-        <CampusAdminFormFields form={form} update={update} />
+        <CampusAdminFormFields form={form} update={update} currentId={campusAdminId} />
         <div className="flex items-center gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
           <button
             type="submit"

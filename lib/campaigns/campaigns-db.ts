@@ -1,7 +1,23 @@
 import { mockCampaigns } from "./mock-campaigns-db";
 import type { Campaign, CampaignInput, CampaignStatus } from "./types";
 
+// Auto-promotes any UPCOMING campaign whose launchDate has arrived to
+// ACTIVE. Runs on every read, so it's always accurate without needing a
+// cron job or background worker — the check itself is cheap (a handful of
+// string comparisons), and mutating the array in place means the promotion
+// persists for the lifetime of the server process, same as any other
+// mutation to this mock store.
+function promoteReadyLaunches() {
+  const todayIso = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+  for (const campaign of mockCampaigns) {
+    if (campaign.status === "UPCOMING" && campaign.launchDate && campaign.launchDate <= todayIso) {
+      campaign.status = "ACTIVE";
+    }
+  }
+}
+
 export async function getAllCampaigns(): Promise<Campaign[]> {
+  promoteReadyLaunches();
   return [...mockCampaigns].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
@@ -10,10 +26,12 @@ export async function getCampaignsByStatus(status: CampaignStatus): Promise<Camp
 }
 
 export async function getCampaignBySlug(slug: string): Promise<Campaign | null> {
+  promoteReadyLaunches();
   return mockCampaigns.find((c) => c.slug === slug) ?? null;
 }
 
 export async function getCampaignById(id: string): Promise<Campaign | null> {
+  promoteReadyLaunches();
   return mockCampaigns.find((c) => c.id === id) ?? null;
 }
 
@@ -29,7 +47,6 @@ export async function createCampaign(input: CampaignInput): Promise<Campaign> {
     faculty: input.faculty, title: input.title, description: input.description,
     detailedDescription: input.detailedDescription, whyMatters: input.whyMatters,
     launchDate: input.launchDate, createdAt: new Date().toISOString(),
-    isHighlight: false, category: "General", raised: 0, goal: 0,
   };
   mockCampaigns.unshift(campaign);
   return campaign;

@@ -10,6 +10,7 @@ import StoryViewer from "./StoryViewer";
 import CampaignReveal from "./ui/CampaignReveal";
 import CampaignContainer from "./ui/CampaignContainer";
 import ScrollToTopButton from "./ui/ScrollToTopButton";
+import { formatLaunchDateBS } from "@/lib/nepali-date";
 
 import type { Campaign, CampaignHighlight } from "@/lib/campaigns/types";
 import {
@@ -250,8 +251,10 @@ export default function CampaignsClient({ campaigns, highlights }: { campaigns: 
                     {selectedCampaign.faculty}
                   </span>
                   {selectedCampaign.status === "UPCOMING" && selectedCampaign.launchDate && (
-                    <span className="text-xs font-semibold text-gray-500">Launching {selectedCampaign.launchDate}</span>
-                  )}
+  <span className="text-xs font-semibold text-gray-500">
+    Launching {formatLaunchDateBS(selectedCampaign.launchDate)}
+  </span>
+)}
                 </div>
                 <h2 className="mt-5 text-2xl font-bold leading-tight tracking-tight text-[#172B3A] sm:text-4xl">{selectedCampaign.title}</h2>
                 <p className="mt-4 text-sm leading-7 text-gray-500 sm:text-base sm:leading-8">{selectedCampaign.description}</p>

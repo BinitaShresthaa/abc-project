@@ -154,38 +154,47 @@ export default function CampaignCarousel<T>({
     lastTimeRef.current = performance.now();
   }
 
-  function handleWheel(e: React.WheelEvent) {
-    // Touchpads send real horizontal deltaX on a two-finger swipe.
-    // A vertical mouse wheel only sends deltaY — remap that to horizontal
-    // movement too so a plain mouse wheel also scrolls the row.
-    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    if (delta === 0) return;
+  useEffect(() => {
+  const wrapper = wrapperRef.current;
+  if (!wrapper) return;
+
+  function onWheel(e: WheelEvent) {
+    // Only take over when the gesture is genuinely horizontal
+    // (touchpad two-finger swipe). A plain vertical mouse wheel
+    // or vertical trackpad scroll should pass through untouched
+    // so the page still scrolls normally.
+    const isHorizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+    if (!isHorizontal || e.deltaX === 0) return;
 
     e.preventDefault();
-    positionRef.current -= delta;
+    positionRef.current -= e.deltaX;
     applyPosition();
     pauseThenResume();
   }
 
+  wrapper.addEventListener("wheel", onWheel, { passive: false });
+  return () => wrapper.removeEventListener("wheel", onWheel);
+}, []);
+
   const carouselItems = Array.from({ length: repeatCount }, () => items).flat();
 
   return (
-    <div
-      ref={wrapperRef}
-      className="relative w-full overflow-hidden"
-      onMouseEnter={() => { pausedRef.current = true; }}
-      onMouseLeave={() => {
-        if (!isDraggingRef.current) pausedRef.current = false;
-        handleDragEnd();
-      }}
-      onMouseDown={(e) => handleDragStart(e.clientX)}
-      onMouseMove={(e) => handleDragMove(e.clientX)}
-      onMouseUp={handleDragEnd}
-      onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
-      onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
-      onTouchEnd={handleDragEnd}
-      onWheel={handleWheel}
-    >
+   <div
+  ref={wrapperRef}
+  className="relative w-full overflow-hidden"
+  style={{ overscrollBehaviorX: "contain" }}
+  onMouseEnter={() => { pausedRef.current = true; }}
+  onMouseLeave={() => {
+    if (!isDraggingRef.current) pausedRef.current = false;
+    handleDragEnd();
+  }}
+  onMouseDown={(e) => handleDragStart(e.clientX)}
+  onMouseMove={(e) => handleDragMove(e.clientX)}
+  onMouseUp={handleDragEnd}
+  onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+  onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
+  onTouchEnd={handleDragEnd}
+>
       <div className={`pointer-events-none absolute left-0 top-0 z-20 h-full w-14 bg-gradient-to-r ${fade === "dark" ? "from-[#062B42]" : "from-[#F5FAFD]"} to-transparent`} />
 
       <div

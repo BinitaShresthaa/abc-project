@@ -1,6 +1,7 @@
 import type { YearSemesterValue } from "./academic-progress";
 import { getFacultyLevel } from "./faculty-data";
 import type { Gender } from "./gender";
+import { assertEmailNotTaken } from "./identity-registry";
 
 export type StudentStatus = "active" | "left" | "passout";
 
@@ -49,15 +50,11 @@ export const mockStudents: Student[] = [
   },
 ];
 
-// Mutates the mock array in place — fine for now with no database.
-// When you connect a real DB, this becomes an UPDATE statement instead.
 export function setStudentStatus(id: string, status: StudentStatus) {
   const student = mockStudents.find((s) => s.id === id);
   if (student) student.status = status;
 }
 
-// Generates a simple sequential registration number.
-// Replace with your real numbering scheme (or a DB auto-increment) later.
 function generateRegNo(faculty: string): string {
   const year = new Date().getFullYear();
   const prefix = getFacultyLevel(faculty) === "master" ? "STU-M" : "STU";
@@ -69,6 +66,7 @@ function generateRegNo(faculty: string): string {
   }
   return candidate;
 }
+
 export interface NewStudentInput {
   name: string;
   gender: Gender;
@@ -83,9 +81,8 @@ export interface NewStudentInput {
   photo?: string;
 }
 
-// Mimics an async DB insert — swap the body for a real `INSERT`/Prisma call
-// later; the function signature and return shape can stay the same.
 export async function createStudent(input: NewStudentInput): Promise<Student> {
+  assertEmailNotTaken(input.email, "student");
   const newStudent: Student = {
     id: `student-${Date.now()}`,
     regNo: generateRegNo(input.faculty),
@@ -101,19 +98,10 @@ export function getStudentById(id: string): Student | undefined {
   return mockStudents.find((s) => s.id === id);
 }
 
-// Mimics an async DB update — swap the body for a real UPDATE/Prisma call later.
 export async function updateStudent(id: string, input: NewStudentInput): Promise<Student | undefined> {
   const student = mockStudents.find((s) => s.id === id);
   if (!student) return undefined;
-
-  // regNo, batch, status, id are intentionally NOT overwritten by an edit —
-  // those are system-assigned, not editable fields on this form.
+  assertEmailNotTaken(input.email, "student", id);
   Object.assign(student, input);
   return student;
-}
-function assertUniqueStudentEmail(email: string, excludeId?: string) {
-  const clash = mockStudents.find(
-    (s) => s.email.trim().toLowerCase() === email.trim().toLowerCase() && s.id !== excludeId
-  );
-  if (clash) throw new Error(`Email "${email}" is already used by another student.`);
 }

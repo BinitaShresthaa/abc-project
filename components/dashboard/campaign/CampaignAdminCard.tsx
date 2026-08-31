@@ -25,6 +25,8 @@ export default function CampaignAdminCard({
     onDelete?.(campaign.id);
   }
 
+  const canHighlight = campaign.status !== "UPCOMING";
+
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
       <div className="relative h-40 w-full overflow-hidden">
@@ -51,14 +53,16 @@ export default function CampaignAdminCard({
               <Pencil size={13} /> Edit
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => onHighlight?.(campaign)}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${isHighlighted ? "bg-amber-400 text-white hover:bg-amber-500" : "border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"}`}
-          >
-            <Sparkles size={13} /> {isHighlighted ? "Highlighted" : "Highlight"}
-          </button>
-          {isHighlighted && onManagePhotos && (
+          {canHighlight && (
+            <button
+              type="button"
+              onClick={() => onHighlight?.(campaign)}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${isHighlighted ? "bg-amber-400 text-white hover:bg-amber-500" : "border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"}`}
+            >
+              <Sparkles size={13} /> {isHighlighted ? "Highlighted" : "Highlight"}
+            </button>
+          )}
+          {canHighlight && isHighlighted && onManagePhotos && (
             <button type="button" onClick={() => onManagePhotos(campaign)} aria-label="Manage highlight photos" className="flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
               <Images size={14} />
             </button>
