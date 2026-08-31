@@ -1,17 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import type { Campaign } from "@/lib/campaigns/types";
 import { clubList } from "@/lib/club-data";
+import { useToast } from "@/lib/toast-context";
+import { validateLaunchDate } from "@/lib/validation";
 
 export default function CampaignAddView() {
-    const [campaign, setCampaign] = useState<Campaign | null>(null);
-  
+  const { showToast } = useToast();
   const [preview, setPreview] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<"UPCOMING" | "ACTIVE">("UPCOMING");
+  const [launchDate, setLaunchDate] = useState("");
+const launchDateError = launchDate ? (!validateLaunchDate(launchDate).valid ? validateLaunchDate(launchDate).message : undefined) : undefined;
+  const formRef = useState<HTMLFormElement | null>(null);
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -19,20 +20,25 @@ export default function CampaignAddView() {
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError(null);
-    const formData = new FormData(e.currentTarget);
+  e.preventDefault();
+  if (launchDate && !validateLaunchDate(launchDate).valid) {
+    showToast(validateLaunchDate(launchDate).message!, "error");
+    return;
+  }
+  const form = e.currentTarget;
+  const formData = new FormData(form);
+  // ...rest unchanged
     setSubmitting(true);
     try {
       const res = await fetch("/api/campaigns", { method: "POST", body: formData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save.");
-      setSuccessMsg(`"${data.title}" was created.`);
-      e.currentTarget.reset();
+      showToast("Added successfully");
+      form.reset();
       setPreview("");
       setStatus("UPCOMING");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      showToast(err instanceof Error ? err.message : "Something went wrong.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -41,9 +47,6 @@ export default function CampaignAddView() {
   return (
     <div className="max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
       <h2 className="text-base font-bold text-slate-800 dark:text-white">Add Campaign</h2>
-
-      {successMsg && <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-500/10 dark:text-emerald-400">{successMsg}</div>}
-      {error && <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-500/10 dark:text-red-400">{error}</div>}
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
@@ -61,12 +64,12 @@ export default function CampaignAddView() {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-  <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Club</label>
-  <select name="faculty" required defaultValue="" className="max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-    <option value="" disabled>Select club</option>
-    {clubList.map((c) => (<option key={c} value={c}>{c}</option>))}
-  </select>
-</div>
+            <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Club</label>
+            <select name="faculty" required defaultValue="" className="max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+              <option value="" disabled>Select club</option>
+              {clubList.map((c) => (<option key={c} value={c}>{c}</option>))}
+            </select>
+          </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Status</label>
             <select name="status" value={status} onChange={(e) => setStatus(e.target.value as "UPCOMING" | "ACTIVE")} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
@@ -75,11 +78,24 @@ export default function CampaignAddView() {
             </select>
           </div>
         </div>
-        {status === "UPCOMING" && (
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Launch Date (optional)</label>
-<input type="date" name="launchDate" defaultValue={/* Edit only */ campaign?.launchDate ?? ""} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />          </div>
-        )}
+       {status === "UPCOMING" && (
+  <div>
+    <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Launch Date (optional)</label>
+    <input
+      type="date"
+      name="launchDate"
+      value={launchDate}
+      onChange={(e) => setLaunchDate(e.target.value)}
+      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+    />
+    {launchDateError && (
+      <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-red-500">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="shrink-0"><circle cx="12" cy="12" r="10" /></svg>
+        {launchDateError}
+      </p>
+    )}
+  </div>
+)}
         <div className="flex items-center gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
           <button type="submit" disabled={submitting} className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60">
             {submitting ? "Saving..." : "Save Campaign"}

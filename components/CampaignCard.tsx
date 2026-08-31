@@ -1,6 +1,7 @@
 "use client";
 
 import { Clock, Heart, CheckCircle2 } from "lucide-react";
+import { formatLaunchDateBS } from "@/lib/nepali-date";
 
 type CampaignCardProps = {
   slug: string;
@@ -52,10 +53,10 @@ export default function CampaignCard({
         <p className="mt-3 line-clamp-3 text-sm leading-6 text-gray-500">{description}</p>
 
         {status === "UPCOMING" && launchDate && (
-          <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-gray-500">
-            <Clock size={14} className="text-[#0E76BD]" /> From: {launchDate}
-          </div>
-        )}
+  <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-gray-500">
+    <Clock size={14} className="text-[#0E76BD]" /> From: {formatLaunchDateBS(launchDate)}
+  </div>
+)}
 
         <div className="mt-auto pt-5">
           {(status === "ACTIVE" || status === "UPCOMING") && (

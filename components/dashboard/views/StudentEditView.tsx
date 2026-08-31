@@ -111,7 +111,13 @@ export default function StudentEditView({
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-        <StudentFormFields form={form} update={update} level={level} onFacultyChange={handleFacultyChange} />
+        <StudentFormFields
+          form={form}
+          update={update}
+          level={level}
+          onFacultyChange={handleFacultyChange}
+          currentId={studentId}
+        />
         <div className="flex items-center gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
           <button
             type="submit"

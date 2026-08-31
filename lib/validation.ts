@@ -15,13 +15,19 @@ export function validateName(name: string, fieldLabel = "Name"): ValidationResul
 }
 
 export function validatePhone(phone: string, fieldLabel = "Contact number"): ValidationResult {
-  const digitsOnly = phone.replace(/\D/g, "");
-  if (!phone.trim()) return { valid: false, message: `${fieldLabel} is required.` };
-  if (digitsOnly.length !== 10) {
+  const trimmed = phone.trim();
+  if (!trimmed) return { valid: false, message: `${fieldLabel} is required.` };
+  // Reject anything that isn't purely digits first — no letters, spaces,
+  // dashes, or symbols of any kind.
+  if (!/^\d+$/.test(trimmed)) {
+    return { valid: false, message: `${fieldLabel} must contain numbers only — no letters or symbols.` };
+  }
+  if (trimmed.length !== 10) {
     return { valid: false, message: `${fieldLabel} must be exactly 10 digits.` };
   }
-  if (!/^\d+$/.test(digitsOnly)) {
-    return { valid: false, message: `${fieldLabel} must contain only numbers.` };
+  // Nepali mobile numbers start with 96, 97, or 98 (NTC, Ncell, Smart Cell).
+  if (!/^9[678]\d{8}$/.test(trimmed)) {
+    return { valid: false, message: `${fieldLabel} must be a valid Nepali mobile number (starting with 98, 97, or 96).` };
   }
   return { valid: true };
 }
@@ -34,8 +40,8 @@ export function validateEmail(email: string): ValidationResult {
   // real campus/work emails. See note below the code for how to lock it down
   // to Gmail only if that's genuinely what you meant.
   if (!/^[^\s@]+@gmail\.com$/i.test(trimmed)) {
-  return { valid: false, message: "Email must be a valid @gmail.com address." };
-}
+    return { valid: false, message: "Email must be a valid @gmail.com address." };
+  }
   return { valid: true };
 }
 
@@ -65,6 +71,21 @@ export function validatePassword(password: string): ValidationResult {
   }
   if (!/[!@#$%^&*(),.?":{}|<>_\-+=[\]/\\~`]/.test(password)) {
     return { valid: false, message: "Password must contain at least one special character." };
+  }
+  return { valid: true };
+}
+
+export function validateLaunchDate(dateStr: string, originalDate?: string): ValidationResult {
+  if (!dateStr) return { valid: true }; // optional field
+  // Exempt the campaign's own original date — it may have legitimately been
+  // set in the past (e.g. created same-day, or time has since elapsed), and
+  // re-saving the form without changing it shouldn't suddenly fail.
+  if (originalDate && dateStr === originalDate) return { valid: true };
+  const date = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (date < today) {
+    return { valid: false, message: "Launch date cannot be in the past." };
   }
   return { valid: true };
 }

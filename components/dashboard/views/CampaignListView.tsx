@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import CampaignCardGrid from "@/components/dashboard/campaign/CampaignCardGrid";
-import Toast, { useToast } from "@/components/dashboard/campaign/Toast";
+import { useToast } from "@/lib/toast-context";
 import type { Campaign, CampaignHighlight } from "@/lib/campaigns/types";
 import type { DashboardViewProps } from "@/lib/view-types";
 
@@ -10,7 +10,7 @@ export default function CampaignListView({ onNavigate, onEditCampaign }: Partial
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [highlights, setHighlights] = useState<CampaignHighlight[]>([]);
   const [loading, setLoading] = useState(true);
-  const { message, showToast } = useToast();
+  const { showToast } = useToast();
 
   async function load() {
     setLoading(true);
@@ -36,7 +36,7 @@ export default function CampaignListView({ onNavigate, onEditCampaign }: Partial
       showToast(`Removed "${campaign.title}" from Highlights.`);
     } else {
       const res = await fetch("/api/highlights", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId: campaign.id }) });
-      showToast(res.ok ? `Successfully added "${campaign.title}" to Highlights.` : "Failed to add to Highlights.");
+      showToast(res.ok ? `Successfully added "${campaign.title}" to Highlights.` : "Failed to add to Highlights.", res.ok ? "success" : "error");
     }
     load();
   }
@@ -52,7 +52,6 @@ export default function CampaignListView({ onNavigate, onEditCampaign }: Partial
       ) : (
         <CampaignCardGrid campaigns={campaigns} variant="list" emptyLabel="No campaigns yet — add your first one." highlightedCampaignIds={highlightedIds} onEdit={onEditCampaign} onDelete={handleDelete} onHighlight={handleToggleHighlight} />
       )}
-      <Toast message={message} />
     </div>
   );
 }

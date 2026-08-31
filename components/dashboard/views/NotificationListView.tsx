@@ -7,7 +7,9 @@ import {
   markNotificationsRead,
 } from "@/lib/mock-notifications";
 import FeedbackDetailModal from "@/components/dashboard/FeedbackDetailModal";
+import RowMenu from "@/components/dashboard/table/RowMenu";
 import type { FeedbackNotification } from "@/lib/mock-notifications";
+import type { RowAction } from "@/components/dashboard/table/types";
 
 function timeAgo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -24,6 +26,12 @@ export default function NotificationListView() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [viewing, setViewing] = useState<FeedbackNotification | null>(null);
 
+  const unreadCount = mockNotifications.filter((n) => !n.read).length;
+  // Only unread notifications are selectable at all — a read one has
+  // nothing left to "mark as read", so it should never show a checkbox
+  // or stay in the selected set.
+  const selectableIds = new Set(mockNotifications.filter((n) => !n.read).map((n) => n.id));
+
   function toggle(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -36,8 +44,25 @@ export default function NotificationListView() {
     setViewing(n);
     if (!n.read) {
       markNotificationRead(n.id);
+      // If it was selected, drop it from the selection too — it's no
+      // longer an unread item that a bulk "mark as read" applies to.
+      setSelected((prev) => {
+        const next = new Set(prev);
+        next.delete(n.id);
+        return next;
+      });
       forceRefresh((x) => x + 1);
     }
+  }
+
+  function handleMarkOneRead(n: FeedbackNotification) {
+    markNotificationRead(n.id);
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.delete(n.id);
+      return next;
+    });
+    forceRefresh((x) => x + 1);
   }
 
   function handleMarkSelectedRead() {
@@ -46,11 +71,17 @@ export default function NotificationListView() {
     forceRefresh((x) => x + 1);
   }
 
+  function rowActionsFor(n: FeedbackNotification): RowAction<FeedbackNotification>[] {
+    // A read notification has no actions left — no menu at all for it.
+    if (n.read) return [];
+    return [{ label: "Mark as read", onSelect: () => handleMarkOneRead(n), variant: "primary" }];
+  }
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-center justify-between border-b border-slate-100 p-4 dark:border-slate-800">
         <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-          {mockNotifications.filter((n) => !n.read).length} unread
+          {unreadCount} unread
         </h2>
         {selected.size > 0 && (
           <button
@@ -71,12 +102,19 @@ export default function NotificationListView() {
               key={n.id}
               className={`flex items-start gap-3 px-4 py-3.5 transition-colors ${!n.read ? "bg-primary/5" : ""}`}
             >
-              <input
-                type="checkbox"
-                checked={selected.has(n.id)}
-                onChange={() => toggle(n.id)}
-                className="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 accent-primary"
-              />
+              {/* Checkbox only exists for unread items — a read notification
+                  has nothing to select for a bulk "mark as read" action. */}
+              {selectableIds.has(n.id) ? (
+                <input
+                  type="checkbox"
+                  checked={selected.has(n.id)}
+                  onChange={() => toggle(n.id)}
+                  className="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 accent-primary"
+                />
+              ) : (
+                <span className="mt-1 h-4 w-4 shrink-0" /> // keeps row alignment consistent
+              )}
+
               <button onClick={() => openNotification(n)} className="min-w-0 flex-1 text-left">
                 <div className="flex items-center gap-2">
                   {!n.read && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
@@ -85,14 +123,8 @@ export default function NotificationListView() {
                 </div>
                 <p className="mt-0.5 truncate text-sm text-slate-500 dark:text-slate-400">{n.message}</p>
               </button>
-              {!n.read && (
-                <button
-                  onClick={() => { markNotificationRead(n.id); forceRefresh((x) => x + 1); }}
-                  className="shrink-0 text-xs font-medium text-primary hover:underline"
-                >
-                  Mark read
-                </button>
-              )}
+
+              <RowMenu row={n} actions={rowActionsFor(n)} />
             </div>
           ))}
         </div>

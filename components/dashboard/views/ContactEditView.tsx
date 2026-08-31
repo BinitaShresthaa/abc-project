@@ -101,7 +101,7 @@ export default function ContactEditView({
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-        <ContactFormFields form={form} update={update} />
+        <ContactFormFields form={form} update={update} currentId={contactId} />
         <div className="flex items-center gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
           <button
             type="submit"

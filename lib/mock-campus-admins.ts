@@ -1,4 +1,5 @@
 import type { Gender } from "./gender";
+import { assertEmailNotTaken } from "./identity-registry";
 
 export interface CampusAdmin {
   id: string;
@@ -33,12 +34,6 @@ function generateCampusAdminId(): string {
   }
   return candidate;
 }
-function assertUniqueCampusAdminEmail(email: string, excludeId?: string) {
-  const clash = mockCampusAdmins.find(
-    (a) => a.email.trim().toLowerCase() === email.trim().toLowerCase() && a.id !== excludeId
-  );
-  if (clash) throw new Error(`Email "${email}" is already used by another Campus Administrator.`);
-}
 
 export interface NewCampusAdminInput {
   name: string;
@@ -50,7 +45,7 @@ export interface NewCampusAdminInput {
 }
 
 export async function createCampusAdmin(input: NewCampusAdminInput): Promise<CampusAdmin> {
-  assertUniqueCampusAdminEmail(input.email);
+  assertEmailNotTaken(input.email, "campusAdmin");
   const newAdmin: CampusAdmin = {
     id: `campus-admin-${Date.now()}`,
     campusAdminId: generateCampusAdminId(),
@@ -67,7 +62,7 @@ export function getCampusAdminById(id: string): CampusAdmin | undefined {
 export async function updateCampusAdmin(id: string, input: NewCampusAdminInput): Promise<CampusAdmin | undefined> {
   const admin = mockCampusAdmins.find((a) => a.id === id);
   if (!admin) return undefined;
-  assertUniqueCampusAdminEmail(input.email, id);
+  assertEmailNotTaken(input.email, "campusAdmin", id);
   Object.assign(admin, input);
   return admin;
 }

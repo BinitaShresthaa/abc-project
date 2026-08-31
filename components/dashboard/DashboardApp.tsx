@@ -96,11 +96,8 @@ export default function DashboardApp({ user, navItems }: { user: DashboardUser; 
               {editing?.type === "student" ? (
                 <StudentEditView studentId={editing.id} onDone={closeEditing} />
               ) : editing?.type === "campaign" ? (
-                <CampaignEditView
-                  campaignId={editing.id}
-                  {...({ onDone: closeEditing } as any)}
-                />
-              ) : editing?.type === "contact" ? (
+  <CampaignEditView campaignId={editing.id} onDone={closeEditing} />
+) : editing?.type === "contact" ? (
                 <ContactEditView contactId={editing.id} onDone={closeEditing} />
               ) : editing?.type === "campusAdmin" ? (
                 <CampusAdminEditView campusAdminId={editing.id} onDone={closeEditing} />

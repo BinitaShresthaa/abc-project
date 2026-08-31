@@ -1,4 +1,5 @@
 import type { Gender } from "./gender";
+import { assertEmailNotTaken } from "./identity-registry";
 
 export interface ContactPerson {
   id: string;
@@ -8,12 +9,8 @@ export interface ContactPerson {
   gender: Gender;
   email: string;
   contactNo: string;
-  // SECURITY NOTE: plaintext only because there's no backend yet.
-  // Once a real database exists, this must be hashed (bcrypt/argon2) at
-  // write time and never read back in plaintext — the edit form should
-  // let someone SET a new password, not display the existing one.
   password: string;
-  position: string; // free-text description of their role/position
+  position: string;
   assignedFaculty: string;
 }
 
@@ -31,7 +28,7 @@ export const mockContacts: ContactPerson[] = [
   },
   {
     id: "contact-2",
-    contactId: "CNT-2024-001",
+    contactId: "CNT-2024-002",
     name: "Ghan Bahadur",
     gender: "Male",
     email: "gb.sinjali@aadikavicampus.edu.np",
@@ -40,10 +37,10 @@ export const mockContacts: ContactPerson[] = [
     position: "Faculty Focal Person — BICTE",
     assignedFaculty: "BICTE",
   },
-   {
+  {
     id: "contact-3",
-    contactId: "CNT-2024-001",
-    name: "hari thapa",
+    contactId: "CNT-2024-003",
+    name: "Hari Thapa",
     gender: "Male",
     email: "hari.thapa@aadikavicampus.edu.np",
     contactNo: "+977-98160XXXXX",
@@ -76,6 +73,7 @@ export interface NewContactInput {
 }
 
 export async function createContact(input: NewContactInput): Promise<ContactPerson> {
+  assertEmailNotTaken(input.email, "contact");
   const newContact: ContactPerson = {
     id: `contact-${Date.now()}`,
     contactId: generateContactId(),
@@ -92,12 +90,7 @@ export function getContactById(id: string): ContactPerson | undefined {
 export async function updateContact(id: string, input: NewContactInput): Promise<ContactPerson | undefined> {
   const contact = mockContacts.find((c) => c.id === id);
   if (!contact) return undefined;
+  assertEmailNotTaken(input.email, "contact", id);
   Object.assign(contact, input);
   return contact;
-}
-function assertUniqueContactEmail(email: string, excludeId?: string) {
-  const clash = mockContacts.find(
-    (c) => c.email.trim().toLowerCase() === email.trim().toLowerCase() && c.id !== excludeId
-  );
-  if (clash) throw new Error(`Email "${email}" is already used by another contact.`);
 }
