@@ -3,8 +3,17 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import type { DashboardUser } from "@/lib/roles";
+import NotificationBell from "./NotificationBell";
 
-export default function Topbar({ title, user }: { title: string; user: DashboardUser }) {
+export default function Topbar({
+  title,
+  user,
+  onNavigate,
+}: {
+  title: string;
+  user: DashboardUser;
+  onNavigate?: (key: string) => void;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const initials = user.name.split(" ").slice(0, 2).map((p) => p[0]).join("").toUpperCase();
@@ -25,7 +34,8 @@ export default function Topbar({ title, user }: { title: string; user: Dashboard
   }
 
   return (
-<header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6 dark:border-slate-800 dark:bg-slate-900 transition-colors duration-200">      <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 lg:text-xl">{title}</h1>
+    <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6 dark:border-slate-800 dark:bg-slate-900 transition-colors duration-200">
+      <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 lg:text-xl">{title}</h1>
 
       <div className="flex items-center gap-4">
         <button
@@ -45,13 +55,7 @@ export default function Topbar({ title, user }: { title: string; user: Dashboard
           )}
         </button>
 
-        <button aria-label="Notifications" className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
-        </button>
+        <NotificationBell onNavigate={onNavigate} />
 
         <div className="relative">
           <button onClick={() => setMenuOpen((v) => !v)} className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800">

@@ -12,7 +12,10 @@
     transition-duration: 200ms;
   }
 }
-
+@keyframes story-fill {
+  from { width: 0%; }
+  to { width: 100%; }
+}
 body {
   font-family: var(--font-quicksand-sans), sans-serif;
 }

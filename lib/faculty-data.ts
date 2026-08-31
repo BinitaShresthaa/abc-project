@@ -8,15 +8,16 @@ import type { FacultyMember } from "./types";
 // ---------------------------------------------------------------
 export const facultyList: string[] = [
   // ---------- Bachelor's level ----------
-  "BA English",
-  "BBA",
   "BA",
-  "BICTE",
+  "BA English",
+  
   "BA Nepali",
+  "BBA",
+   "B.Ed English",
   "B.Ed Math",
   "B.Ed Nepali",
   "B.Ed Science",
-
+"BICTE",
   // ---------- Master's level ----------
   "M.A",
   "M.B.S",

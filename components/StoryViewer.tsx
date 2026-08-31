@@ -1,263 +1,116 @@
 "use client";
 
-import {
-  ArrowLeft,
-  ArrowRight,
-  Clock,
-  Heart,
-  X,
-} from "lucide-react";
-
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
+import type { HighlightEntry } from "./CampaignStories";
 
-type StoryCampaign = {
-  slug: string;
-
-  image: string;
-
-  status:
-    | "ACTIVE"
-    | "UPCOMING"
-    | "COMPLETED";
-
-  category: string;
-
-  title: string;
-
-  description: string;
-
-  launchDate?: string;
-};
-
-type Props = {
-  campaigns: StoryCampaign[];
-
-  startIndex: number;
-
-  onClose: () => void;
-
-  onDonate: (
-    campaign: StoryCampaign
-  ) => void;
-
-  onNotify?: (
-    campaign: StoryCampaign
-  ) => void;
-};
+const DURATION = 5000; // ms per photo, like IG/FB stories
 
 export default function StoryViewer({
-  campaigns,
+  entries,
   startIndex,
   onClose,
   onDonate,
-}: Props) {
+  contained = false,
+}: {
+  entries: HighlightEntry[];
+  startIndex: number;
+  onClose: () => void;
+  onDonate?: (campaign: HighlightEntry["campaign"]) => void;
+  contained?: boolean;
+}) {
+  const [entryIndex, setEntryIndex] = useState(startIndex);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const entry = entries[entryIndex];
+  const photos = entry?.photos ?? [];
 
-  const [index, setIndex] =
-    useState(startIndex);
-
-  const campaign =
-    campaigns[index];
-
-  const next = () => {
-
-    setIndex(
-      (current) =>
-        (current + 1) %
-        campaigns.length
-    );
-
-  };
-
-  const previous = () => {
-
-    setIndex(
-      (current) =>
-        (current - 1 +
-          campaigns.length) %
-        campaigns.length
-    );
-
-  };
-
-  useEffect(() => {
-
-    const handleKey = (
-      event: KeyboardEvent
-    ) => {
-
-      if (event.key === "Escape") {
-        onClose();
-      }
-
-      if (
-        event.key === "ArrowRight"
-      ) {
-        next();
-      }
-
-      if (
-        event.key === "ArrowLeft"
-      ) {
-        previous();
-      }
-
-    };
-
-    window.addEventListener(
-      "keydown",
-      handleKey
-    );
-
-    return () => {
-
-      window.removeEventListener(
-        "keydown",
-        handleKey
-      );
-
-    };
-
-  });
-
-  if (!campaign) {
-    return null;
+  function goNext() {
+    if (photoIndex < photos.length - 1) {
+      setPhotoIndex((i) => i + 1);
+    } else if (entryIndex < entries.length - 1) {
+      setEntryIndex((i) => i + 1);
+      setPhotoIndex(0);
+    } else if (!contained) {
+      onClose();
+    }
   }
 
-  return (
+  function goPrev() {
+    if (photoIndex > 0) {
+      setPhotoIndex((i) => i - 1);
+    } else if (entryIndex > 0) {
+      const prevPhotos = entries[entryIndex - 1].photos;
+      setEntryIndex((i) => i - 1);
+      setPhotoIndex(Math.max(0, prevPhotos.length - 1));
+    }
+  }
 
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80 p-4">
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight") goNext();
+      if (e.key === "ArrowLeft") goPrev();
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  });
 
-      {/* CLOSE */}
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      goNext();
+    }, DURATION);
+    return () => clearTimeout(timer);
+  }, [entryIndex, photoIndex]);
 
-      <button
-        type="button"
-        onClick={onClose}
-        className="absolute right-5 top-5 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-white text-gray-700 shadow-xl transition hover:scale-105"
-      >
+  if (!entry) return null;
+  const { campaign } = entry;
 
-        <X size={22} />
-
-      </button>
-
-      {/* LEFT */}
-
-      <button
-        type="button"
-        onClick={previous}
-        className="absolute left-3 z-40 hidden h-12 w-12 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-lg sm:flex"
-      >
-
-        <ArrowLeft size={22} />
-
-      </button>
-
-      {/* CARD */}
-
-      <div className="relative h-[85vh] w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
-
-        {/* IMAGE */}
-
-        <div className="relative h-[55%]">
-
-          <img
-            src={campaign.image}
-            alt={campaign.title}
-            className="h-full w-full object-cover"
-          />
-
-          <div className="absolute inset-0 bg-gradient-to-t from-[#062B42]/80 via-transparent to-transparent" />
-
-          {/* STATUS */}
-
-          <div className="absolute left-5 top-5">
-
-            <span className="rounded-full bg-[#0E76BD] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white">
-
-              {campaign.status}
-
-            </span>
-
+  const card = (
+    <div
+      className={
+        contained
+          ? "relative aspect-[9/16] w-full max-w-xs overflow-hidden rounded-2xl bg-black shadow-2xl"
+          : "relative h-full w-full max-w-md overflow-hidden bg-black sm:h-[90vh] sm:rounded-2xl"
+      }
+    >
+      <div className="absolute left-0 right-0 top-0 z-20 flex gap-1 p-3">
+        {photos.map((_, i) => (
+          <div key={`${entryIndex}-${i}`} className="h-1 flex-1 overflow-hidden rounded-full bg-white/30">
+            {i < photoIndex ? (
+              <div className="h-full w-full rounded-full bg-white" />
+            ) : i === photoIndex ? (
+              <div
+                key={`${entryIndex}-${photoIndex}-active`}
+                className="h-full rounded-full bg-white"
+                style={{ animation: `story-fill ${DURATION}ms linear forwards` }}
+              />
+            ) : null}
           </div>
-
-        </div>
-
-        {/* CONTENT */}
-
-        <div className="flex h-[45%] flex-col overflow-y-auto p-6">
-
-          <p className="text-xs font-bold uppercase tracking-widest text-[#0E76BD]">
-
-            {campaign.category}
-
-          </p>
-
-          <h2 className="mt-2 text-2xl font-bold text-[#172B3A]">
-
-            {campaign.title}
-
-          </h2>
-
-          <p className="mt-3 text-sm leading-6 text-gray-500">
-
-            {campaign.description}
-
-          </p>
-
-          {campaign.launchDate && (
-
-            <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-gray-500">
-
-              <Clock
-                size={14}
-                className="text-[#0E76BD]"
-              />
-
-              Launching{" "}
-              {campaign.launchDate}
-
-            </div>
-
-          )}
-
-          {campaign.status !==
-            "COMPLETED" && (
-
-            <button
-              type="button"
-              onClick={() =>
-                onDonate(campaign)
-              }
-              className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-red-500 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-red-500/20 transition hover:bg-red-600"
-            >
-
-              <Heart
-                size={18}
-                fill="currentColor"
-              />
-
-              Donate Now
-
-            </button>
-
-          )}
-
-        </div>
-
+        ))}
       </div>
 
-      {/* RIGHT */}
-
-      <button
-        type="button"
-        onClick={next}
-        className="absolute right-3 z-40 hidden h-12 w-12 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-lg sm:flex"
-      >
-
-        <ArrowRight size={22} />
-
+      <div className="absolute left-3 top-8 z-20">
+        <span className="text-sm font-bold text-white drop-shadow">{campaign.title}</span>
+      </div>
+      <button type="button" onClick={onClose} className="absolute right-3 top-7 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white">
+        <X size={18} />
       </button>
 
-    </div>
+      <img src={photos[photoIndex]} alt={campaign.title} className="h-full w-full object-contain" />
 
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4 pb-6">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-white/70">{campaign.faculty}</p>
+        <p className="mt-1 line-clamp-3 text-xs leading-5 text-white/90">{campaign.description}</p>
+      </div>
+
+      <button type="button" aria-label="Previous photo" onClick={goPrev} className="absolute left-0 top-0 h-full w-1/3" />
+      <button type="button" aria-label="Next photo" onClick={goNext} className="absolute right-0 top-0 h-full w-1/3" />
+    </div>
+  );
+
+  return (
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center backdrop-blur-sm p-4">
+      {card}
+    </div>
   );
 }

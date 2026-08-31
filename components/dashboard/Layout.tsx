@@ -1,18 +1,13 @@
-import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import DashboardShell from "@/components/dashboard/DashboardShell";
 import { getCurrentUser } from "@/lib/auth";
 import { getVisibleNavItems } from "@/lib/nav-config";
+import DashboardApp from "@/components/dashboard/DashboardApp";
 
-export default async function DashboardLayout({ children }: { children: ReactNode }) {
+export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   const navItems = await getVisibleNavItems(user.role.id);
 
-  return (
-    <DashboardShell user={user} navItems={navItems} title="Dashboard Overview">
-      {children}
-    </DashboardShell>
-  );
+  return <DashboardApp user={user} navItems={navItems} />;
 }

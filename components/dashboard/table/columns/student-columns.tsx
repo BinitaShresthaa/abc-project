@@ -16,6 +16,12 @@ export const studentColumns: TableColumn<Student>[] = [
   searchable: true,
   searchValue: (r) => `${r.name} ${r.regNo}`,
 },
+{
+  key: "gender",
+  header: "Gender",
+  render: (r) => <span>{r.gender}</span>,
+  exportValue: (r) => r.gender,
+},
   {
     key: "contact",
     header: "Contact No.",
