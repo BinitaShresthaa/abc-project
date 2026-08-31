@@ -20,7 +20,7 @@ function timeAgo(iso: string): string {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-export default function NotificationBell() {
+export default function NotificationBell({ onNavigate }: { onNavigate?: (key: string) => void }) {
   const [open, setOpen] = useState(false);
   const [, forceRefresh] = useState(0);
   const [viewing, setViewing] = useState<FeedbackNotification | null>(null);
@@ -49,6 +49,11 @@ export default function NotificationBell() {
   function handleMarkAllRead() {
     markAllNotificationsRead();
     forceRefresh((x) => x + 1);
+  }
+
+  function handleViewAll() {
+    setOpen(false);
+    onNavigate?.("notification");
   }
 
   return (
@@ -104,9 +109,13 @@ export default function NotificationBell() {
               )}
             </div>
 
-            <a href="#" onClick={(e) => { e.preventDefault(); setOpen(false); }} className="block border-t border-slate-100 px-4 py-2.5 text-center text-xs font-semibold text-primary hover:underline dark:border-slate-700">
+            <button
+              type="button"
+              onClick={handleViewAll}
+              className="block w-full border-t border-slate-100 px-4 py-2.5 text-center text-xs font-semibold text-primary hover:underline dark:border-slate-700"
+            >
               View all notifications
-            </a>
+            </button>
           </div>
         )}
       </div>

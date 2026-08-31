@@ -91,7 +91,7 @@ export default function DashboardApp({ user, navItems }: { user: DashboardUser; 
         <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
           <Sidebar items={navItems} activeKey={safeKey} onSelect={navigate} />
           <div className="flex flex-1 flex-col overflow-hidden">
-            <Topbar title={title} user={user} />
+<Topbar title={title} user={user} onNavigate={navigate} />
             <main className="flex-1 overflow-y-auto p-6">
               {editing?.type === "student" ? (
                 <StudentEditView studentId={editing.id} onDone={closeEditing} />
