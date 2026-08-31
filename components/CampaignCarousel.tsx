@@ -16,58 +16,117 @@ export default function CampaignCarousel<T>({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
 
-  const animationRef =
-    useRef<number | null>(null);
+  const animationRef = useRef<number | null>(null);
 
-  const positionRef =
-    useRef(0);
+  const positionRef = useRef(0);
 
-  const lastTimeRef =
-    useRef<number | null>(null);
+  const lastTimeRef = useRef<number | null>(null);
 
-  const pausedRef =
-    useRef(false);
+  const pausedRef = useRef(false);
 
-  /*
-  ---------------------------------------------------------
-  HOW MANY TIMES THE ITEMS ARRAY IS DUPLICATED
-
-  Only 2 copies is enough on a narrow screen, but on a wide
-  screen (or with a small items array) the visible area can
-  become wider than one full duplicated set — which exposes
-  a visible "end" right before the loop wraps.
-
-  This is recalculated from the real, measured viewport
-  width, so it always has enough copies rendered ahead of
-  the scroll position, no matter how wide the container is.
-  ---------------------------------------------------------
-  */
+  const wheelTimerRef =
+    useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [repeatCount, setRepeatCount] = useState(2);
-
-  /*
-  ---------------------------------------------------------
-  SPEED
-  ---------------------------------------------------------
-  */
 
   const speed = 0.45;
 
   /*
-  ---------------------------------------------------------
-  MEASURE + DECIDE HOW MANY COPIES ARE NEEDED
-  ---------------------------------------------------------
+  =========================================================
+  GET WIDTH OF ONE COMPLETE SET
+  =========================================================
+  */
+
+  const getLoopWidth = () => {
+    const track = trackRef.current;
+
+    if (!track || items.length === 0) {
+      return 0;
+    }
+
+    const firstCard =
+      track.children[0] as HTMLElement | undefined;
+
+    if (!firstCard) {
+      return 0;
+    }
+
+    const cardWidth =
+      firstCard.getBoundingClientRect().width;
+
+    const styles =
+      window.getComputedStyle(track);
+
+    const gap =
+      parseFloat(styles.columnGap || "0");
+
+    return (
+      (cardWidth + gap) *
+      items.length
+    );
+  };
+
+  /*
+  =========================================================
+  NORMALIZE POSITION
+  =========================================================
+  */
+
+  const normalizePosition = (
+    position: number,
+    loopWidth: number
+  ) => {
+    if (loopWidth <= 0) {
+      return position;
+    }
+
+    while (position <= -loopWidth) {
+      position += loopWidth;
+    }
+
+    while (position > 0) {
+      position -= loopWidth;
+    }
+
+    return position;
+  };
+
+  /*
+  =========================================================
+  APPLY POSITION
+  =========================================================
+  */
+
+  const applyPosition = (position: number) => {
+    const track = trackRef.current;
+
+    if (!track) {
+      return;
+    }
+
+    track.style.transform =
+      `translate3d(${position}px, 0, 0)`;
+  };
+
+  /*
+  =========================================================
+  CALCULATE COPIES
+  =========================================================
   */
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
     const track = trackRef.current;
 
-    if (!wrapper || !track || items.length === 0) {
+    if (
+      !wrapper ||
+      !track ||
+      items.length === 0
+    ) {
       return;
     }
 
-    const computeRepeatCount = () => {
+    const calculateCopies = () => {
       const firstCard =
         track.children[0] as HTMLElement | undefined;
 
@@ -84,12 +143,9 @@ export default function CampaignCarousel<T>({
       const gap =
         parseFloat(styles.columnGap || "0");
 
-      /*
-      Width of ONE complete set of items.
-      */
-
       const setWidth =
-        (cardWidth + gap) * items.length;
+        (cardWidth + gap) *
+        items.length;
 
       if (setWidth <= 0) {
         return;
@@ -98,31 +154,28 @@ export default function CampaignCarousel<T>({
       const viewportWidth =
         wrapper.getBoundingClientRect().width;
 
-      /*
-      -----------------------------------------------------
-      We need enough rendered copies so that at ANY scroll
-      position, there's still at least one full viewport's
-      worth of cards ahead, plus one extra set as a buffer
-      for the wrap-around moment.
-      -----------------------------------------------------
-      */
+      const needed =
+        Math.ceil(
+          (viewportWidth * 2) /
+            setWidth
+        ) + 1;
 
-      const needed = Math.ceil(
-        (viewportWidth * 2) / setWidth
-      ) + 1;
-
-      const next = Math.max(2, needed);
+      const next =
+        Math.max(2, needed);
 
       setRepeatCount((prev) =>
-        prev === next ? prev : next
+        prev === next
+          ? prev
+          : next
       );
     };
 
-    computeRepeatCount();
+    calculateCopies();
 
-    const resizeObserver = new ResizeObserver(() => {
-      computeRepeatCount();
-    });
+    const resizeObserver =
+      new ResizeObserver(
+        calculateCopies
+      );
 
     resizeObserver.observe(wrapper);
 
@@ -131,152 +184,221 @@ export default function CampaignCarousel<T>({
     };
   }, [items]);
 
-  useEffect(() => {
-    const track = trackRef.current;
+  /*
+  =========================================================
+  HORIZONTAL WHEEL / TRACKPAD
+  =========================================================
 
-    if (!track || items.length === 0) {
+  Normal vertical wheel:
+      PAGE SCROLLS
+
+  Horizontal trackpad:
+      CAROUSEL MOVES
+
+  Shift + wheel:
+      CAROUSEL MOVES
+  =========================================================
+  */
+
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+
+    if (!wrapper) {
       return;
     }
 
-    /*
-    -------------------------------------------------------
-    GET WIDTH OF ONE COMPLETE SET
-    -------------------------------------------------------
-    */
+    const handleWheel = (
+      event: WheelEvent
+    ) => {
+      const isVertical =
+        Math.abs(event.deltaY) >
+        Math.abs(event.deltaX);
 
-    const getLoopWidth = () => {
-      const firstCard =
-        track.children[0] as HTMLElement;
+      /*
+      Normal mouse wheel.
 
-      if (!firstCard) {
-        return 0;
+      DO NOT TOUCH IT.
+
+      Let the page scroll normally.
+      */
+
+      if (
+        isVertical &&
+        !event.shiftKey
+      ) {
+        return;
       }
 
       /*
-      Each campaign card has the same
-      fixed width.
-
-      We calculate:
-
-      card width + gap
+      Determine horizontal movement.
       */
 
-      const cardWidth =
-        firstCard.getBoundingClientRect().width;
+      let movement = 0;
 
-      const styles =
-        window.getComputedStyle(track);
+      if (event.shiftKey) {
+        movement = event.deltaY;
+      } else {
+        movement = event.deltaX;
+      }
 
-      const gap =
-        parseFloat(styles.columnGap || "0");
+      if (movement === 0) {
+        return;
+      }
+
+      const loopWidth =
+        getLoopWidth();
+
+      if (loopWidth <= 0) {
+        return;
+      }
 
       /*
-      IMPORTANT:
-
-      One complete loop is always the width
-      of ONE set of items, regardless of how
-      many duplicated copies are rendered.
+      This is horizontal carousel
+      scrolling, so prevent the page
+      from moving horizontally.
       */
 
-      return (
-        (cardWidth + gap) *
-        items.length
+      event.preventDefault();
+
+      /*
+      Move carousel.
+
+      Positive movement:
+          move left
+
+      Negative movement:
+          move right
+      */
+
+      positionRef.current -= movement;
+
+      positionRef.current =
+        normalizePosition(
+          positionRef.current,
+          loopWidth
+        );
+
+      applyPosition(
+        positionRef.current
       );
+
+      /*
+      Pause auto-scroll briefly.
+      */
+
+      pausedRef.current = true;
+
+      lastTimeRef.current = null;
+
+      if (wheelTimerRef.current) {
+        clearTimeout(
+          wheelTimerRef.current
+        );
+      }
+
+      wheelTimerRef.current =
+        setTimeout(() => {
+          pausedRef.current = false;
+
+          lastTimeRef.current =
+            performance.now();
+        }, 350);
     };
 
-    /*
-    -------------------------------------------------------
-    ANIMATION
-    -------------------------------------------------------
-    */
+    wrapper.addEventListener(
+      "wheel",
+      handleWheel,
+      {
+        passive: false,
+      }
+    );
+
+    return () => {
+      wrapper.removeEventListener(
+        "wheel",
+        handleWheel
+      );
+
+      if (wheelTimerRef.current) {
+        clearTimeout(
+          wheelTimerRef.current
+        );
+      }
+    };
+  }, [items]);
+
+  /*
+  =========================================================
+  AUTO SCROLL
+  =========================================================
+  */
+
+  useEffect(() => {
+    const track = trackRef.current;
+
+    if (
+      !track ||
+      items.length === 0
+    ) {
+      return;
+    }
 
     const animate = (time: number) => {
-      /*
-      First frame
-      */
-
-      if (lastTimeRef.current === null) {
+      if (
+        lastTimeRef.current === null
+      ) {
         lastTimeRef.current = time;
       }
 
       const delta =
-        time - lastTimeRef.current;
+        time -
+        lastTimeRef.current;
 
       lastTimeRef.current = time;
 
       /*
-      -----------------------------------------------------
-      MOVE
-      -----------------------------------------------------
+      RIGHT -> LEFT
       */
 
       if (!pausedRef.current) {
         positionRef.current -=
-          speed * (delta / 16.67);
+          speed *
+          (delta / 16.67);
 
         const loopWidth =
           getLoopWidth();
 
         if (loopWidth > 0) {
-          /*
-          -------------------------------------------------
-          THE IMPORTANT PART
-          -------------------------------------------------
+          positionRef.current =
+            normalizePosition(
+              positionRef.current,
+              loopWidth
+            );
 
-          Instead of:
-
-          position = 0
-
-          we DON'T visibly reset.
-
-          We add the loop width.
-
-          Because enough duplicated sets are
-          always rendered ahead of the current
-          position (see repeatCount above), the
-          user never sees an end — only
-          continuous, seamless movement.
-          -------------------------------------------------
-          */
-
-          if (
-            positionRef.current <=
-            -loopWidth
-          ) {
-            positionRef.current +=
-              loopWidth;
-          }
-
-          track.style.transform =
-            `translate3d(${positionRef.current}px, 0, 0)`;
+          applyPosition(
+            positionRef.current
+          );
         }
       }
 
       animationRef.current =
-        requestAnimationFrame(animate);
+        requestAnimationFrame(
+          animate
+        );
     };
 
-    /*
-    -------------------------------------------------------
-    START
-    -------------------------------------------------------
-    */
-
     animationRef.current =
-      requestAnimationFrame(animate);
+      requestAnimationFrame(
+        animate
+      );
 
     /*
-    -------------------------------------------------------
+    =======================================================
     RESIZE
-    -------------------------------------------------------
+    =======================================================
     */
 
     const handleResize = () => {
-      /*
-      Don't suddenly jump the carousel
-      while resizing.
-      */
-
       lastTimeRef.current = null;
     };
 
@@ -286,9 +408,9 @@ export default function CampaignCarousel<T>({
     );
 
     /*
-    -------------------------------------------------------
+    =======================================================
     CLEANUP
-    -------------------------------------------------------
+    =======================================================
     */
 
     return () => {
@@ -308,26 +430,24 @@ export default function CampaignCarousel<T>({
   }, [items]);
 
   /*
-  ---------------------------------------------------------
-  DUPLICATE THE CARDS
-  ---------------------------------------------------------
-
-  VERY IMPORTANT:
-
-  We need enough identical sets that the track is
-  always wider than the visible viewport, at every
-  scroll position — not just a fixed 2 copies.
-
-  [1] [2] [3] [1] [2] [3] [1] [2] [3] ...
-
-  This allows each set to replace the one before it
-  without the user ever seeing a reset or an end.
+  =========================================================
+  DUPLICATE ITEMS
+  =========================================================
   */
 
-  const carouselItems = Array.from(
-    { length: repeatCount },
-    () => items
-  ).flat();
+  const carouselItems =
+    Array.from(
+      {
+        length: repeatCount,
+      },
+      () => items
+    ).flat();
+
+  /*
+  =========================================================
+  RENDER
+  =========================================================
+  */
 
   return (
     <div
@@ -337,44 +457,8 @@ export default function CampaignCarousel<T>({
         w-full
         overflow-hidden
       "
-
-      /*
-      -----------------------------------------------------
-      PAUSE ONLY WHEN USER IS ACTUALLY
-      HOVERING / TOUCHING
-      -----------------------------------------------------
-      */
-
-      onMouseEnter={() => {
-        pausedRef.current = true;
-      }}
-
-      onMouseLeave={() => {
-        pausedRef.current = false;
-
-        /*
-        Prevent a sudden jump after hover.
-        */
-
-        lastTimeRef.current =
-          performance.now();
-      }}
-
-      onTouchStart={() => {
-        pausedRef.current = true;
-      }}
-
-      onTouchEnd={() => {
-        pausedRef.current = false;
-
-        lastTimeRef.current =
-          performance.now();
-      }}
     >
-
-      {/* =================================================
-          LEFT FADE
-      ================================================= */}
+      {/* LEFT FADE */}
 
       <div
         className={`
@@ -385,22 +469,17 @@ export default function CampaignCarousel<T>({
           z-20
           h-full
           w-14
-
           bg-gradient-to-r
-
           ${
             fade === "dark"
               ? "from-[#062B42]"
               : "from-[#F5FAFD]"
           }
-
           to-transparent
         `}
       />
 
-      {/* =================================================
-          TRACK
-      ================================================= */}
+      {/* TRACK */}
 
       <div
         ref={trackRef}
@@ -418,7 +497,6 @@ export default function CampaignCarousel<T>({
             "transform",
         }}
       >
-
         {carouselItems.map(
           (item, index) => (
             <div
@@ -428,9 +506,7 @@ export default function CampaignCarousel<T>({
                 w-[280px]
                 flex-shrink-0
                 items-stretch
-
                 sm:w-[320px]
-
                 lg:w-[350px]
               "
             >
@@ -443,12 +519,9 @@ export default function CampaignCarousel<T>({
             </div>
           )
         )}
-
       </div>
 
-      {/* =================================================
-          RIGHT FADE
-      ================================================= */}
+      {/* RIGHT FADE */}
 
       <div
         className={`
@@ -459,19 +532,15 @@ export default function CampaignCarousel<T>({
           z-20
           h-full
           w-14
-
           bg-gradient-to-l
-
           ${
             fade === "dark"
               ? "from-[#062B42]"
               : "from-[#F5FAFD]"
           }
-
           to-transparent
         `}
       />
-
     </div>
   );
 }

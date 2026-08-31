@@ -17,6 +17,8 @@ export default function DataTable<T extends Record<string, unknown>>({
   rowIdKey,
   rowActions,
   bulkActions,
+  onRowClick,
+  activeRowId,
 }: {
   title: string;
   data: T[];
@@ -25,6 +27,13 @@ export default function DataTable<T extends Record<string, unknown>>({
   rowIdKey: keyof T;
   rowActions?: RowAction<T>[];
   bulkActions?: BulkAction<T>[];
+  // Optional — fires when a row is clicked (outside its checkbox / "···" menu).
+  // Use this to drive a detail panel (see StudentListView.tsx). Every existing
+  // caller that doesn't pass this keeps working exactly as before.
+  onRowClick?: (row: T) => void;
+  // Optional — id of the row to visually mark as "active" (e.g. the one
+  // currently shown in a detail panel), independent of the bulk-select checkboxes.
+  activeRowId?: string | null;
 }) {
   const getRowId = (row: T) => String(row[rowIdKey]);
 
@@ -288,14 +297,18 @@ export default function DataTable<T extends Record<string, unknown>>({
             {pagedData.map((row) => {
               const id = getRowId(row);
               const isSelected = selected.has(id);
+              const isActive = activeRowId != null && activeRowId === id;
               return (
                 <tr
                   key={id}
+                  onClick={() => onRowClick?.(row)}
                   className={`border-b border-slate-50 last:border-0 dark:border-slate-800/60 ${
-                    isSelected ? "bg-primary/5" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                    onRowClick ? "cursor-pointer" : ""
+                  } ${
+                    isActive || isSelected ? "bg-primary/5" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
                   }`}
                 >
-                  <td className="p-4">
+                  <td className="p-4" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="checkbox"
                       checked={isSelected}
@@ -309,7 +322,7 @@ export default function DataTable<T extends Record<string, unknown>>({
                     </td>
                   ))}
                   {rowActions && rowActions.length > 0 && (
-                    <td className="p-4 text-right">
+                    <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <RowMenu row={row} actions={rowActions} />
                     </td>
                   )}

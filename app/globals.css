@@ -53,6 +53,56 @@ html {
   background-color: #64748b;
 }
 
+
+/* Homepage layout primitives (scoped so the rest of the main project is untouched). */
+.aadikavi-shell {
+  width: 100%;
+}
+
+.aadikavi-shell .section-container {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+.aadikavi-shell h1,
+.aadikavi-shell h2,
+.aadikavi-shell h3,
+.aadikavi-shell h4 {
+  font-family: var(--font-baloo-2), system-ui, sans-serif;
+}
+
+.aadikavi-shell .scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(14, 118, 190, 0.35) transparent;
+}
+
+.aadikavi-shell .scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+}
+
+.aadikavi-shell .scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(14, 118, 190, 0.35);
+  border-radius: 999px;
+}
+
+.aadikavi-shell .scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (min-width: 640px) {
+  .aadikavi-shell .section-container {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .aadikavi-shell .section-container {
+    padding-inline: 2rem;
+  }
+}
+
 @keyframes hang-sway {
   0%, 100% { transform: translateY(0) rotate(var(--sway-rotate, 0deg)); }
   50%      { transform: translateY(-8px) rotate(var(--sway-rotate, 0deg)); }
@@ -61,4 +111,85 @@ html {
 @keyframes card-sweep {
   0%   { background-position: -120% 0; }
   100% { background-position: 220% 0; }
+}
+/* -------------------------------------------------------------------------- */
+/* Aadikavi homepage design tokens                                            */
+/* -------------------------------------------------------------------------- */
+@theme {
+  --color-campus-blue: #0E76BE;
+  --color-campus-blue-dark: #084068;
+  --color-campus-blue-light: #EAF4FC;
+  --color-campus-blue-pale: #F3F8FD;
+  --color-campus-maroon: #8B0000;
+  --color-campus-maroon-dark: #6B0000;
+  --font-display: var(--font-baloo-2), system-ui, sans-serif;
+  --font-body: var(--font-quicksand-sans), system-ui, sans-serif;
+  --shadow-card: 0 4px 14px rgba(8, 64, 104, 0.10);
+  --shadow-card-hover: 0 14px 30px rgba(8, 64, 104, 0.18);
+  --shadow-nav: 0 2px 10px rgba(8, 64, 104, 0.15);
+  --shadow-elevated: 0 1px 2px rgba(8, 64, 104, 0.06), 0 24px 48px -12px rgba(8, 64, 104, 0.28);
+  --shadow-glow-blue: 0 0 0 1px rgba(255,255,255,0.08), 0 8px 28px rgba(14, 118, 190, 0.45);
+  --shadow-glow-maroon: 0 8px 24px rgba(139, 0, 0, 0.35);
+  --radius-card: 18px;
+  --animate-kenburns: kenburns 7s ease-out both;
+}
+
+@keyframes kenburns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+
+.bg-dot-grid {
+  background-image: radial-gradient(currentColor 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.card-row-glow {
+  isolation: isolate;
+}
+
+.card-row-glow::before {
+  content: "";
+  position: absolute;
+  width: 22rem;
+  height: 22rem;
+  left: 8%;
+  top: 10%;
+  border-radius: 999px;
+  background: rgba(14, 118, 190, 0.08);
+  filter: blur(70px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.dark .bg-white { background-color: #0d1828 !important; }
+.dark .bg-white\/70 { background-color: rgba(13, 24, 40, 0.78) !important; }
+.dark .bg-white\/75 { background-color: rgba(13, 24, 40, 0.80) !important; }
+.dark .bg-white\/80 { background-color: rgba(13, 24, 40, 0.82) !important; }
+.dark .bg-slate-50 { background-color: #101c2d !important; }
+.dark .bg-campus-blue-pale { background-color: #0c1b2d !important; }
+.dark .bg-campus-blue-light { background-color: #10253a !important; }
+.dark .text-slate-900 { color: #f1f5f9 !important; }
+.dark .text-slate-800 { color: #e2e8f0 !important; }
+.dark .text-slate-700 { color: #d5deea !important; }
+.dark .text-slate-600 { color: #c0ccda !important; }
+.dark .text-slate-500 { color: #9fb0c3 !important; }
+.dark .text-campus-blue-dark { color: #d7eaff !important; }
+.dark .text-campus-blue { color: #5db6f5 !important; }
+.dark .border-slate-100,
+.dark .border-slate-200 { border-color: rgba(148, 163, 184, 0.18) !important; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 88px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
