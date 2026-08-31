@@ -19,7 +19,9 @@ export default function CampaignCarousel<T>({
   const animationRef = useRef<number | null>(null);
   const positionRef = useRef(0);
   const lastTimeRef = useRef<number | null>(null);
-  const pausedRef = useRef(false);
+  // Speed multiplier (not a boolean stop flag) — hovering/dragging/wheel
+  // slows the row to a crawl instead of freezing it, matching AutoScrollRow.
+  const speedMultiplierRef = useRef(1);
   const resumeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Manual drag state (mouse + touch)
@@ -30,7 +32,8 @@ export default function CampaignCarousel<T>({
 
   const [repeatCount, setRepeatCount] = useState(2);
 
-  const speed = 0.22;
+  // Matches AutoScrollRow's speed={40} (px/sec there; this is px/frame, so ÷60).
+  const speed = 0.667;
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -82,8 +85,8 @@ export default function CampaignCarousel<T>({
       const delta = time - lastTimeRef.current;
       lastTimeRef.current = time;
 
-      if (!pausedRef.current && !isDraggingRef.current) {
-        positionRef.current -= speed * (delta / 16.67);
+      if (!isDraggingRef.current) {
+        positionRef.current -= speed * speedMultiplierRef.current * (delta / 16.67);
         wrapPosition();
         track.style.transform = `translate3d(${positionRef.current}px, 0, 0)`;
       }
@@ -123,10 +126,10 @@ export default function CampaignCarousel<T>({
   }
 
   function pauseThenResume() {
-    pausedRef.current = true;
+    speedMultiplierRef.current = 0.25;
     if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
     resumeTimeoutRef.current = setTimeout(() => {
-      pausedRef.current = false;
+      speedMultiplierRef.current = 1;
       lastTimeRef.current = performance.now();
     }, 600);
   }
@@ -136,7 +139,7 @@ export default function CampaignCarousel<T>({
     dragMovedRef.current = false;
     dragStartXRef.current = clientX;
     dragStartPositionRef.current = positionRef.current;
-    pausedRef.current = true;
+    speedMultiplierRef.current = 0.25;
     if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
   }
 
@@ -150,51 +153,51 @@ export default function CampaignCarousel<T>({
 
   function handleDragEnd() {
     isDraggingRef.current = false;
-    pausedRef.current = false;
+    speedMultiplierRef.current = 1;
     lastTimeRef.current = performance.now();
   }
 
   useEffect(() => {
-  const wrapper = wrapperRef.current;
-  if (!wrapper) return;
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
 
-  function onWheel(e: WheelEvent) {
-    // Only take over when the gesture is genuinely horizontal
-    // (touchpad two-finger swipe). A plain vertical mouse wheel
-    // or vertical trackpad scroll should pass through untouched
-    // so the page still scrolls normally.
-    const isHorizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY);
-    if (!isHorizontal || e.deltaX === 0) return;
+    function onWheel(e: WheelEvent) {
+      // Only take over when the gesture is genuinely horizontal
+      // (touchpad two-finger swipe). A plain vertical mouse wheel
+      // or vertical trackpad scroll should pass through untouched
+      // so the page still scrolls normally.
+      const isHorizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+      if (!isHorizontal || e.deltaX === 0) return;
 
-    e.preventDefault();
-    positionRef.current -= e.deltaX;
-    applyPosition();
-    pauseThenResume();
-  }
+      e.preventDefault();
+      positionRef.current -= e.deltaX;
+      applyPosition();
+      pauseThenResume();
+    }
 
-  wrapper.addEventListener("wheel", onWheel, { passive: false });
-  return () => wrapper.removeEventListener("wheel", onWheel);
-}, []);
+    wrapper.addEventListener("wheel", onWheel, { passive: false });
+    return () => wrapper.removeEventListener("wheel", onWheel);
+  }, []);
 
   const carouselItems = Array.from({ length: repeatCount }, () => items).flat();
 
   return (
-   <div
-  ref={wrapperRef}
-  className="relative w-full overflow-hidden"
-  style={{ overscrollBehaviorX: "contain" }}
-  onMouseEnter={() => { pausedRef.current = true; }}
-  onMouseLeave={() => {
-    if (!isDraggingRef.current) pausedRef.current = false;
-    handleDragEnd();
-  }}
-  onMouseDown={(e) => handleDragStart(e.clientX)}
-  onMouseMove={(e) => handleDragMove(e.clientX)}
-  onMouseUp={handleDragEnd}
-  onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
-  onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
-  onTouchEnd={handleDragEnd}
->
+    <div
+      ref={wrapperRef}
+      className="relative w-full overflow-hidden"
+      style={{ overscrollBehaviorX: "contain" }}
+      onMouseEnter={() => { speedMultiplierRef.current = 0.25; }}
+      onMouseLeave={() => {
+        if (!isDraggingRef.current) speedMultiplierRef.current = 1;
+        handleDragEnd();
+      }}
+      onMouseDown={(e) => handleDragStart(e.clientX)}
+      onMouseMove={(e) => handleDragMove(e.clientX)}
+      onMouseUp={handleDragEnd}
+      onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+      onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
+      onTouchEnd={handleDragEnd}
+    >
       <div className={`pointer-events-none absolute left-0 top-0 z-20 h-full w-14 bg-gradient-to-r ${fade === "dark" ? "from-[#062B42]" : "from-[#F5FAFD]"} to-transparent`} />
 
       <div
