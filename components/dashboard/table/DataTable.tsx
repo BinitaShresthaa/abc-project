@@ -8,15 +8,17 @@ import { downloadCsv, downloadExcel, downloadPdf, downloadWord, printRows } from
 
 type ExportFormat = "csv" | "excel" | "pdf" | "word";
 const PAGE_SIZE = 10;
-export default function DataTable<T extends object>({  title,
+
+export default function DataTable<T extends Record<string, unknown>>({
+  title,
   data,
   columns,
   filters = [],
   rowIdKey,
   rowActions,
   bulkActions,
-  page: controlledPage,
-  onPageChange,
+  onRowClick,
+  activeRowId,
 }: {
   title: string;
   data: T[];
@@ -25,8 +27,13 @@ export default function DataTable<T extends object>({  title,
   rowIdKey: keyof T;
   rowActions?: RowAction<T>[];
   bulkActions?: BulkAction<T>[];
-  page?: number;
-  onPageChange?: (page: number) => void;
+  // Optional — fires when a row is clicked (outside its checkbox / "···" menu).
+  // Use this to drive a detail panel (see StudentListView.tsx). Every existing
+  // caller that doesn't pass this keeps working exactly as before.
+  onRowClick?: (row: T) => void;
+  // Optional — id of the row to visually mark as "active" (e.g. the one
+  // currently shown in a detail panel), independent of the bulk-select checkboxes.
+  activeRowId?: string | null;
 }) {
   const getRowId = (row: T) => String(row[rowIdKey]);
 
@@ -36,16 +43,7 @@ export default function DataTable<T extends object>({  title,
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [printMenuOpen, setPrintMenuOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>("csv");
-  const [internalPage, setInternalPage] = useState(1);
-
-  // Controlled if the parent supplies both `page` and `onPageChange`;
-  // otherwise falls back to the table's own internal state, unchanged
-  // from before for every table that doesn't need this.
-  const page = controlledPage ?? internalPage;
-  const setPage = onPageChange ?? setInternalPage;
-
-  // ...rest of the file is unchanged — every reference to `page`/`setPage`
-  // already used those two names, so nothing else needs to change.
+  const [page, setPage] = useState(1);
 
   const filterOptions = useMemo(() => {
     const map: Record<string, string[]> = {};
@@ -299,14 +297,18 @@ export default function DataTable<T extends object>({  title,
             {pagedData.map((row) => {
               const id = getRowId(row);
               const isSelected = selected.has(id);
+              const isActive = activeRowId != null && activeRowId === id;
               return (
                 <tr
                   key={id}
+                  onClick={() => onRowClick?.(row)}
                   className={`border-b border-slate-50 last:border-0 dark:border-slate-800/60 ${
-                    isSelected ? "bg-primary/5" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                    onRowClick ? "cursor-pointer" : ""
+                  } ${
+                    isActive || isSelected ? "bg-primary/5" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
                   }`}
                 >
-                  <td className="p-4">
+                  <td className="p-4" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="checkbox"
                       checked={isSelected}
@@ -320,7 +322,7 @@ export default function DataTable<T extends object>({  title,
                     </td>
                   ))}
                   {rowActions && rowActions.length > 0 && (
-                    <td className="p-4 text-right">
+                    <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <RowMenu row={row} actions={rowActions} />
                     </td>
                   )}
@@ -349,40 +351,40 @@ export default function DataTable<T extends object>({  title,
         {totalPages > 1 && (
           <div className="flex items-center gap-1">
             <button
-  onClick={() => setPage(Math.max(1, currentPage - 1))}
-  disabled={currentPage === 1}
-  className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
-  aria-label="Previous page"
->
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6" /></svg>
-</button>
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+              aria-label="Previous page"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6" /></svg>
+            </button>
 
-{Array.from({ length: totalPages }, (_, i) => i + 1)
-  .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
-  .map((p, idx, arr) => (
-    <span key={p} className="flex items-center">
-      {idx > 0 && arr[idx - 1] !== p - 1 && <span className="px-1 text-slate-300">…</span>}
-      <button
-        onClick={() => setPage(p)}
-        className={`flex h-7 w-7 items-center justify-center rounded-md text-xs font-medium transition-colors ${
-          p === currentPage
-            ? "bg-primary text-white"
-            : "text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
-        }`}
-      >
-        {p}
-      </button>
-    </span>
-  ))}
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+              .map((p, idx, arr) => (
+                <span key={p} className="flex items-center">
+                  {idx > 0 && arr[idx - 1] !== p - 1 && <span className="px-1 text-slate-300">…</span>}
+                  <button
+                    onClick={() => setPage(p)}
+                    className={`flex h-7 w-7 items-center justify-center rounded-md text-xs font-medium transition-colors ${
+                      p === currentPage
+                        ? "bg-primary text-white"
+                        : "text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                </span>
+              ))}
 
-<button
-  onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
-  disabled={currentPage === totalPages}
-  className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
-  aria-label="Next page"
->
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6" /></svg>
-</button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+              aria-label="Next page"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6" /></svg>
+            </button>
           </div>
         )}
       </div>

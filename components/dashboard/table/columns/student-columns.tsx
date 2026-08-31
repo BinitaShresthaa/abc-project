@@ -1,5 +1,5 @@
-import type { TableColumn, TableFilter } from "../types";
-import type { Student } from "@/lib/mock-students";
+import type { TableColumn, TableFilter, DetailCardConfig } from "../types";
+import type { Student, StudentStatus } from "@/lib/mock-students";
 import { facultyList } from "@/lib/faculty-data";
 import { formatProgress, getAllProgressOptions } from "@/lib/academic-progress";
 import { adYearToBs } from "@/lib/nepali-date";
@@ -99,3 +99,48 @@ export const studentFilters: TableFilter<Student>[] = [
     options: getAllProgressOptions(),
   },
 ];
+
+const STATUS_LABEL: Record<StudentStatus, string> = {
+  active: "Active",
+  left: "Left",
+  passout: "Passout",
+};
+
+// Wiring for the right-hand "Student Profile" panel shown when a student row
+// is selected (see components/dashboard/table/DetailCard.tsx). Pass this same
+// pattern — a DetailCardConfig<T> — for any other list (alumni-detail-config,
+// campus-admin-detail-config, ...) to get the same panel UI for free.
+//
+// Used as-is by StudentListView, LeftStudentListView, and PassoutStudentListView:
+// the status badge and any status-specific copy come straight from r.status,
+// so the same config works no matter which of the three lists it's shown from.
+export const studentDetailConfig: DetailCardConfig<Student> = {
+  getPhoto: (r) => r.photo,
+  getName: (r) => r.name,
+  idLabel: "Student ID",
+  getId: (r) => r.regNo,
+  getBadges: (r) => [
+    { label: r.faculty, tone: "primary" },
+    { label: STATUS_LABEL[r.status], tone: "neutral" },
+  ],
+  getSections: (r) => [
+    {
+      icon: "mail",
+      heading: "Contact Information",
+      fields: [
+        { label: "Email Address", value: r.email },
+        { label: "Phone Number", value: r.contact },
+        { label: "Current Address", value: r.address, fullWidth: true },
+      ],
+    },
+    {
+      icon: "academic",
+      heading: "Academic Status",
+      fields: [
+        { label: "Faculty", value: r.faculty },
+        { label: "Year / Semester", value: formatProgress(r.progress) },
+        { label: "Batch Year", value: `${adYearToBs(r.batch)} BS (${r.batch} AD)`, fullWidth: true },
+      ],
+    },
+  ],
+};
