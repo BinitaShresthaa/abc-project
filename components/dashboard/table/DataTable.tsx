@@ -9,7 +9,7 @@ import { downloadCsv, downloadExcel, downloadPdf, downloadWord, printRows } from
 type ExportFormat = "csv" | "excel" | "pdf" | "word";
 const PAGE_SIZE = 10;
 
-export default function DataTable<T extends Record<string, unknown>>({
+export default function DataTable<T extends object>({
   title,
   data,
   columns,
@@ -19,6 +19,8 @@ export default function DataTable<T extends Record<string, unknown>>({
   bulkActions,
   onRowClick,
   activeRowId,
+  page: controlledPage,
+  onPageChange,
 }: {
   title: string;
   data: T[];
@@ -29,6 +31,12 @@ export default function DataTable<T extends Record<string, unknown>>({
   bulkActions?: BulkAction<T>[];
   onRowClick?: (row: T) => void;
   activeRowId?: string | null;
+  // Optional — controlled pagination. Pass both `page` and `onPageChange` to
+  // drive the current page from the parent (e.g. to sync it with a URL query
+  // param); omit both and the table manages its own page state internally,
+  // exactly as before.
+  page?: number;
+  onPageChange?: (page: number) => void;
 }) {
   const getRowId = (row: T) => String(row[rowIdKey]);
 
@@ -38,7 +46,12 @@ export default function DataTable<T extends Record<string, unknown>>({
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [printMenuOpen, setPrintMenuOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>("csv");
-  const [page, setPage] = useState(1);
+  const [internalPage, setInternalPage] = useState(1);
+
+  // Controlled if the parent supplies both `page` and `onPageChange`;
+  // otherwise falls back to the table's own internal state.
+  const page = controlledPage ?? internalPage;
+  const setPage = onPageChange ?? setInternalPage;
 
   const filterOptions = useMemo(() => {
     const map: Record<string, string[]> = {};
@@ -345,8 +358,11 @@ export default function DataTable<T extends Record<string, unknown>>({
 
         {totalPages > 1 && (
           <div className="flex items-center gap-1">
+            {/* NOTE: these pass an explicit target page number rather than a
+                functional updater — `setPage` can be `onPageChange`, which only
+                accepts a plain number, not a `(prev) => next` callback. */}
             <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => setPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
               className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
               aria-label="Previous page"
@@ -373,7 +389,7 @@ export default function DataTable<T extends Record<string, unknown>>({
               ))}
 
             <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
               className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
               aria-label="Next page"
