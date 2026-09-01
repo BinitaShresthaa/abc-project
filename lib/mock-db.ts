@@ -29,9 +29,14 @@ export const mockPermissions: Record<string, Set<string>> = {
     "alumni", "alumni-list", "alumni-story", "alumni-verification", "notification",
     "settings",
   ]),
-  "role-contact": new Set(["dashboard", "student-list", "student-left", "passout-student-list"]),
+"role-contact": new Set([
+  "dashboard","student",
+  "student-list", "student-left", "passout-student-list",
+  "campaign", "campaign-list", "campaign-past",
+]),
   "role-faculty": new Set(["dashboard", "campaign", "campaign-list"]),
   "role-student": new Set(["dashboard"]),
+  
 };
 
 // Only Admin and Contact Person have working logins for now.

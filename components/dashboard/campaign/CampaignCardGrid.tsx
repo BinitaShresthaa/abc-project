@@ -11,6 +11,7 @@ export default function CampaignCardGrid({
   variant = "list",
   emptyLabel = "No campaigns found.",
   highlightedCampaignIds,
+  canManageId,
   onEdit,
   onDelete,
   onHighlight,
@@ -20,6 +21,7 @@ export default function CampaignCardGrid({
   variant?: "list" | "past";
   emptyLabel?: string;
   highlightedCampaignIds?: Set<string>;
+  canManageId?: (campaign: Campaign) => boolean;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   onHighlight?: (campaign: Campaign) => void;
@@ -78,6 +80,7 @@ export default function CampaignCardGrid({
                 campaign={campaign}
                 variant={variant}
                 isHighlighted={highlightedCampaignIds?.has(campaign.id) ?? false}
+                canManage={canManageId ? canManageId(campaign) : true}
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onHighlight={onHighlight}

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAllCampaigns, createCampaign } from "@/lib/campaigns/campaigns-db";
 import { fileToDataUrl } from "@/lib/campaigns/file-to-data-url-server";
+import { getCurrentUser } from "@/lib/auth";
 import type { CampaignStatus } from "@/lib/campaigns/types";
 
 export async function GET() {
@@ -8,6 +9,11 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const user = await getCurrentUser();
+  if (!user || (user.role.name !== "admin" && user.role.name !== "campus_admin")) {
+    return NextResponse.json({ error: "Only admins can create campaigns." }, { status: 403 });
+  }
+
   const formData = await req.formData();
   const imageFile = formData.get("image");
   if (!(imageFile instanceof File) || imageFile.size === 0) {

@@ -3,10 +3,14 @@
 import { useEffect, useState } from "react";
 import CampaignCardGrid from "@/components/dashboard/campaign/CampaignCardGrid";
 import { useToast } from "@/lib/toast-context";
+import { useDashboardUser } from "@/lib/dashboard-user-context";
 import type { Campaign, CampaignHighlight } from "@/lib/campaigns/types";
 import type { DashboardViewProps } from "@/lib/view-types";
 
 export default function CampaignListView({ onNavigate, onEditCampaign }: Partial<DashboardViewProps>) {
+  const user = useDashboardUser();
+  const canManageCampaigns = user?.role.name === "admin" || user?.role.name === "campus_admin";
+
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [highlights, setHighlights] = useState<CampaignHighlight[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,12 +49,23 @@ export default function CampaignListView({ onNavigate, onEditCampaign }: Partial
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100">Campaigns</h1>
-        <button type="button" onClick={() => onNavigate?.("campaign-add")} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">+ Add Campaign</button>
+        {canManageCampaigns && (
+          <button type="button" onClick={() => onNavigate?.("campaign-add")} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">+ Add Campaign</button>
+        )}
       </div>
       {loading ? (
         <p className="text-sm text-slate-400">Loading...</p>
       ) : (
-        <CampaignCardGrid campaigns={campaigns} variant="list" emptyLabel="No campaigns yet — add your first one." highlightedCampaignIds={highlightedIds} onEdit={onEditCampaign} onDelete={handleDelete} onHighlight={handleToggleHighlight} />
+        <CampaignCardGrid
+          campaigns={campaigns}
+          variant="list"
+          emptyLabel="No campaigns yet — add your first one."
+          highlightedCampaignIds={highlightedIds}
+          canManageId={() => canManageCampaigns}
+          onEdit={canManageCampaigns ? onEditCampaign : undefined}
+          onDelete={canManageCampaigns ? handleDelete : undefined}
+          onHighlight={canManageCampaigns ? handleToggleHighlight : undefined}
+        />
       )}
     </div>
   );

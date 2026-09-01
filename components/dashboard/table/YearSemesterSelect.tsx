@@ -1,6 +1,7 @@
 "use client";
 
 import { getProgressRange, type ProgressMode, type YearSemesterValue } from "@/lib/academic-progress";
+import ScrollDropdown from "@/components/dashboard/forms/ScrollDropdown";
 
 export default function YearSemesterSelect({
   level,
@@ -33,16 +34,15 @@ export default function YearSemesterSelect({
         ))}
       </div>
 
-      <select
-        value={value?.value ?? ""}
-        onChange={(e) => onChange({ mode, value: Number(e.target.value) })}
-        className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-      >
-        <option value="" disabled>Select {mode}</option>
-        {options.map((n) => (
-          <option key={n} value={n}>{n}</option>
-        ))}
-      </select>
+      <div className="w-24">
+        <ScrollDropdown
+          value={value?.value ?? ""}
+          options={options.map((n) => ({ value: n, label: String(n) }))}
+          placeholder={`Select ${mode}`}
+          onChange={(v) => onChange({ mode, value: Number(v) })}
+          visibleRows={5}
+        />
+      </div>
     </div>
   );
 }

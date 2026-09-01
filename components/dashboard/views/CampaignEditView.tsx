@@ -5,6 +5,8 @@ import { clubList } from "@/lib/club-data";
 import type { Campaign } from "@/lib/campaigns/types";
 import { useToast } from "@/lib/toast-context";
 import { validateLaunchDate } from "@/lib/validation";
+import NepaliDatePicker from "@/components/dashboard/forms/NepaliDatePicker";
+import ScrollDropdown from "@/components/dashboard/forms/ScrollDropdown";
 
 export default function CampaignEditView({
   campaignId,
@@ -19,12 +21,14 @@ export default function CampaignEditView({
   const [submitting, setSubmitting] = useState(false);
   const [launchDate, setLaunchDate] = useState("");
   const [status, setStatus] = useState<"UPCOMING" | "ACTIVE" | "COMPLETED">("UPCOMING");
+  const [faculty, setFaculty] = useState("");
 
   useEffect(() => {
     fetch("/api/campaigns").then((r) => r.json()).then((all: Campaign[]) => {
       const found = all.find((c) => c.id === campaignId) ?? null;
       setCampaign(found);
       setLaunchDate(found?.launchDate ?? "");
+      setFaculty(found?.faculty ?? "");
       if (found?.status) setStatus(found.status);
     });
   }, [campaignId]);
@@ -55,6 +59,12 @@ export default function CampaignEditView({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    if (!faculty) {
+      showToast("Please select a club.", "error");
+      return;
+    }
+
     // Launch date only matters while a campaign is upcoming — an
     // active/completed campaign shouldn't be blocked by a stale date.
     if (status === "UPCOMING" && launchDate && !validateLaunchDate(launchDate, activeCampaign.launchDate).valid) {
@@ -109,34 +119,34 @@ export default function CampaignEditView({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Club</label>
-            <select name="faculty" defaultValue={activeCampaign.faculty} className="max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-              {clubList.map((c) => (<option key={c} value={c}>{c}</option>))}
-            </select>
+            <ScrollDropdown
+              value={faculty}
+              options={clubList.map((c) => ({ value: c, label: c }))}
+              placeholder="Select club"
+              onChange={(v) => setFaculty(String(v))}
+            />
+            <input type="hidden" name="faculty" value={faculty} />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Status</label>
-            <select
-              name="status"
+            <ScrollDropdown
               value={status}
-              onChange={(e) => setStatus(e.target.value as "UPCOMING" | "ACTIVE" | "COMPLETED")}
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-            >
-              <option value="UPCOMING">Upcoming</option>
-              <option value="ACTIVE">Active</option>
-              <option value="COMPLETED">Completed</option>
-            </select>
+              options={[
+                { value: "UPCOMING", label: "Upcoming" },
+                { value: "ACTIVE", label: "Active" },
+                { value: "COMPLETED", label: "Completed" },
+              ]}
+              placeholder="Select status"
+              onChange={(v) => setStatus(v as "UPCOMING" | "ACTIVE" | "COMPLETED")}
+            />
+            <input type="hidden" name="status" value={status} />
           </div>
         </div>
         {status === "UPCOMING" && (
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Launch Date (optional)</label>
-            <input
-              type="date"
-              name="launchDate"
-              value={launchDate}
-              onChange={(e) => setLaunchDate(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-            />
+            <NepaliDatePicker value={launchDate} onChange={setLaunchDate} />
+            <input type="hidden" name="launchDate" value={launchDate} />
             {launchDateError && (
               <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-red-500">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="shrink-0"><circle cx="12" cy="12" r="10" /></svg>

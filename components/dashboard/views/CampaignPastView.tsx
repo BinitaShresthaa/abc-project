@@ -3,9 +3,13 @@
 import { useEffect, useState } from "react";
 import CampaignCardGrid from "@/components/dashboard/campaign/CampaignCardGrid";
 import Toast, { useToast } from "@/components/dashboard/campaign/Toast";
+import { useDashboardUser } from "@/lib/dashboard-user-context";
 import type { Campaign, CampaignHighlight } from "@/lib/campaigns/types";
 
 export default function CampaignPastView() {
+  const user = useDashboardUser();
+  const canManageCampaigns = user?.role.name === "admin" || user?.role.name === "campus_admin";
+
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [highlights, setHighlights] = useState<CampaignHighlight[]>([]);
   const { message, showToast } = useToast();
@@ -35,7 +39,14 @@ export default function CampaignPastView() {
   return (
     <div className="space-y-4">
       <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100">Past Campaigns</h1>
-      <CampaignCardGrid campaigns={campaigns} variant="past" emptyLabel="No completed campaigns yet." highlightedCampaignIds={highlightedIds} onHighlight={handleToggleHighlight} />
+      <CampaignCardGrid
+        campaigns={campaigns}
+        variant="past"
+        emptyLabel="No completed campaigns yet."
+        highlightedCampaignIds={highlightedIds}
+        canManageId={() => canManageCampaigns}
+        onHighlight={canManageCampaigns ? handleToggleHighlight : undefined}
+      />
       <Toast message={message} />
     </div>
   );

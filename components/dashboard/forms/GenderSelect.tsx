@@ -1,5 +1,7 @@
+"use client";
+
 import { genderOptions, type Gender } from "@/lib/gender";
-import { inputClass } from "./StudentFormFields";
+import ScrollDropdown from "./ScrollDropdown";
 
 export default function GenderSelect({
   value,
@@ -9,11 +11,12 @@ export default function GenderSelect({
   onChange: (value: Gender) => void;
 }) {
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value as Gender)} className={inputClass}>
-      <option value="" disabled>Select gender</option>
-      {genderOptions.map((g) => (
-        <option key={g} value={g}>{g}</option>
-      ))}
-    </select>
+    <ScrollDropdown
+      value={value}
+      options={genderOptions.map((g) => ({ value: g, label: g }))}
+      placeholder="Select gender"
+      onChange={(v) => onChange(v as Gender)}
+      visibleRows={4}
+    />
   );
 }
