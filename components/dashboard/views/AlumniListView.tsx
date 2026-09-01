@@ -1,15 +1,16 @@
 import { mockAlumni } from "@/lib/mock-alumni";
 import { alumniColumns, alumniFilters } from "@/components/dashboard/table/columns/alumni-columns";
+import { sortByName } from "@/lib/sort-utils";
 import DataTable from "@/components/dashboard/table/DataTable";
-import type { ComponentProps } from "react";
+import type { Alumni } from "@/lib/mock-alumni";
 
 export default function AlumniListView() {
   return (
-    <DataTable
+    <DataTable<Alumni & Record<string, unknown>>
       title="Alumni List"
-      data={mockAlumni as unknown as Record<string, unknown>[]}
-      columns={alumniColumns as unknown as ComponentProps<typeof DataTable>["columns"]}
-      filters={alumniFilters as unknown as ComponentProps<typeof DataTable>["filters"]}
+      data={sortByName(mockAlumni) as (Alumni & Record<string, unknown>)[]}
+      columns={alumniColumns}
+      filters={alumniFilters}
       rowIdKey="id"
     />
   );

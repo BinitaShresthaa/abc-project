@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { mockStudents, setStudentStatus, getClassmates } from "@/lib/mock-students";
 import { studentColumns, studentFilters, studentDetailConfig } from "@/components/dashboard/table/columns/student-columns";
 import { formatProgress } from "@/lib/academic-progress";
+import { sortByName } from "@/lib/sort-utils";
 import DataTable from "@/components/dashboard/table/DataTable";
 import DetailCard from "@/components/dashboard/table/DetailCard";
 import type { Student } from "@/lib/mock-students";
@@ -12,19 +13,13 @@ import type { DashboardViewProps } from "@/lib/view-types";
 
 export default function StudentListView({ onEditStudent }: Partial<DashboardViewProps>) {
   const [, forceRefresh] = useState(0);
-  const activeStudents = mockStudents.filter((s) => s.status === "active");
+  const activeStudents = sortByName(mockStudents.filter((s) => s.status === "active"));
   type TableStudent = Student & Record<string, unknown>;
 
-  // No student selected by default — the list stays full width. Clicking a
-  // row opens the profile panel as an overlay; the panel's × closes it again.
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedStudent = selectedId ? activeStudents.find((s) => s.id === selectedId) ?? null : null;
 
-  // Classmates: same faculty + batch + year/semester, scoped to this same
-  // active-students list only (never crosses into Left/Passout). Powers the
-  // profile panel's prev/next "class roster" navigator.
-  const classmates = selectedStudent ? 
-  getClassmates(activeStudents, selectedStudent) : [];
+  const classmates = selectedStudent ? getClassmates(activeStudents, selectedStudent) : [];
   const classIndex = selectedStudent ? classmates.findIndex((s) => s.id === selectedStudent.id) : -1;
 
   function goToClassmate(offset: number) {
@@ -33,8 +28,6 @@ export default function StudentListView({ onEditStudent }: Partial<DashboardView
     if (next) setSelectedId(next.id);
   }
 
-  // If the selected student leaves the active list (e.g. marked as Left/Passout,
-  // or filtered out elsewhere), close the panel rather than pointing at a stale row.
   useEffect(() => {
     if (selectedId && !activeStudents.some((s) => s.id === selectedId)) {
       setSelectedId(null);
@@ -43,7 +36,7 @@ export default function StudentListView({ onEditStudent }: Partial<DashboardView
 
   function handleStatusChange(student: Student, status: "left" | "passout") {
     setStudentStatus(student.id, status);
-    forceRefresh((n) => n + 1); // re-render since mockStudents mutated in place
+    forceRefresh((n) => n + 1);
   }
 
   const rowActions: RowAction<TableStudent>[] = [
@@ -70,8 +63,6 @@ export default function StudentListView({ onEditStudent }: Partial<DashboardView
   ];
 
   return (
-    // `relative` isn't strictly required (the panel is `fixed`, viewport-relative)
-    // but keeps this view a sensible positioning root if you add anything else here.
     <div className="relative">
       <DataTable<TableStudent>
         title="Student List"
@@ -86,10 +77,6 @@ export default function StudentListView({ onEditStudent }: Partial<DashboardView
       />
 
       {selectedStudent && (
-        // Fixed, viewport-anchored overlay — this is what makes the panel sit
-        // ON TOP of the list instead of squeezing it narrower. `top-24`/`bottom-6`
-        // give it clearance below the Topbar and a margin at the bottom; tweak
-        // `top-24` if your Topbar's height differs.
         <div className="fixed right-6 top-24 bottom-6 z-30 w-full max-w-sm">
           <DetailCard
             title="Student Profile"

@@ -29,12 +29,7 @@ export default function DataTable<T extends object>({
   rowIdKey: keyof T;
   rowActions?: RowAction<T>[];
   bulkActions?: BulkAction<T>[];
-  // Optional — fires when a row is clicked (outside its checkbox / "···" menu).
-  // Use this to drive a detail panel (see StudentListView.tsx). Every existing
-  // caller that doesn't pass this keeps working exactly as before.
   onRowClick?: (row: T) => void;
-  // Optional — id of the row to visually mark as "active" (e.g. the one
-  // currently shown in a detail panel), independent of the bulk-select checkboxes.
   activeRowId?: string | null;
   // Optional — controlled pagination. Pass both `page` and `onPageChange` to
   // drive the current page from the parent (e.g. to sync it with a URL query
@@ -94,21 +89,25 @@ export default function DataTable<T extends object>({
   const pageStart = (currentPage - 1) * PAGE_SIZE;
   const pagedData = filteredData.slice(pageStart, pageStart + PAGE_SIZE);
 
-  const pagedIds = pagedData.map(getRowId);
-  const allPagedSelected = pagedIds.length > 0 && pagedIds.every((id) => selected.has(id));
-  const somePagedSelected = pagedIds.some((id) => selected.has(id)) && !allPagedSelected;
+  // "Select all" now targets every row matching the current search/filters —
+  // not just the 10 rows visible on this page. This is the header
+  // checkbox's actual behavior: tick it once, every filtered match gets
+  // selected regardless of how many pages that spans.
+  const filteredIds = useMemo(() => filteredData.map(getRowId), [filteredData]);
+  const allFilteredSelected = filteredIds.length > 0 && filteredIds.every((id) => selected.has(id));
+  const someFilteredSelected = filteredIds.some((id) => selected.has(id)) && !allFilteredSelected;
   const selectedCount = filteredData.filter((r) => selected.has(getRowId(r))).length;
 
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    if (headerCheckboxRef.current) headerCheckboxRef.current.indeterminate = somePagedSelected;
-  }, [somePagedSelected]);
+    if (headerCheckboxRef.current) headerCheckboxRef.current.indeterminate = someFilteredSelected;
+  }, [someFilteredSelected]);
 
   function toggleAll() {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (allPagedSelected) pagedIds.forEach((id) => next.delete(id));
-      else pagedIds.forEach((id) => next.add(id));
+      if (allFilteredSelected) filteredIds.forEach((id) => next.delete(id));
+      else filteredIds.forEach((id) => next.add(id));
       return next;
     });
   }
@@ -193,7 +192,6 @@ export default function DataTable<T extends object>({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* bulk actions — only shown once at least one row is selected */}
           {bulkActions && bulkActions.length > 0 && selectedCount > 0 && (
             <BulkActionsMenu
               actions={bulkActions}
@@ -201,7 +199,6 @@ export default function DataTable<T extends object>({
             />
           )}
 
-          {/* export */}
           <div className="relative">
             <button
               onClick={() => { setExportMenuOpen((v) => !v); setPrintMenuOpen(false); }}
@@ -255,7 +252,6 @@ export default function DataTable<T extends object>({
             )}
           </div>
 
-          {/* print */}
           <div className="relative">
             <button
               onClick={() => { setPrintMenuOpen((v) => !v); setExportMenuOpen(false); }}
@@ -284,7 +280,6 @@ export default function DataTable<T extends object>({
         </div>
       </div>
 
-      {/* table */}
       <div className="styled-scrollbar overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -293,7 +288,7 @@ export default function DataTable<T extends object>({
                 <input
                   ref={headerCheckboxRef}
                   type="checkbox"
-                  checked={allPagedSelected}
+                  checked={allFilteredSelected}
                   onChange={toggleAll}
                   className="h-4 w-4 rounded border-slate-300 accent-primary"
                 />
