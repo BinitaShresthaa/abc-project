@@ -9,7 +9,7 @@ import { downloadCsv, downloadExcel, downloadPdf, downloadWord, printRows } from
 type ExportFormat = "csv" | "excel" | "pdf" | "word";
 const PAGE_SIZE = 10;
 
-export default function DataTable<T extends Record<string, unknown>>({
+export default function DataTable<T extends object>({
   title,
   data,
   columns,
@@ -19,6 +19,7 @@ export default function DataTable<T extends Record<string, unknown>>({
   bulkActions,
   onRowClick,
   activeRowId,
+  showSelectionBadge = false,
 }: {
   title: string;
   data: T[];
@@ -29,6 +30,7 @@ export default function DataTable<T extends Record<string, unknown>>({
   bulkActions?: BulkAction<T>[];
   onRowClick?: (row: T) => void;
   activeRowId?: string | null;
+  showSelectionBadge?: boolean;
 }) {
   const getRowId = (row: T) => String(row[rowIdKey]);
 
@@ -76,10 +78,6 @@ export default function DataTable<T extends Record<string, unknown>>({
   const pageStart = (currentPage - 1) * PAGE_SIZE;
   const pagedData = filteredData.slice(pageStart, pageStart + PAGE_SIZE);
 
-  // "Select all" now targets every row matching the current search/filters —
-  // not just the 10 rows visible on this page. This is the header
-  // checkbox's actual behavior: tick it once, every filtered match gets
-  // selected regardless of how many pages that spans.
   const filteredIds = useMemo(() => filteredData.map(getRowId), [filteredData]);
   const allFilteredSelected = filteredIds.length > 0 && filteredIds.every((id) => selected.has(id));
   const someFilteredSelected = filteredIds.some((id) => selected.has(id)) && !allFilteredSelected;
@@ -152,6 +150,16 @@ export default function DataTable<T extends Record<string, unknown>>({
               className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200"
             />
           </div>
+
+          {showSelectionBadge && selectedCount > 0 && (
+            <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 11l3 3L22 4" />
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+              </svg>
+              {selectedCount} selected
+            </div>
+          )}
 
           {filters.map((f) =>
             f.isYearFilter ? (

@@ -7,6 +7,7 @@ export default function CampaignAdminCard({
   campaign,
   variant = "list",
   isHighlighted = false,
+  canManage = true,
   onEdit,
   onDelete,
   onHighlight,
@@ -15,6 +16,7 @@ export default function CampaignAdminCard({
   campaign: Campaign;
   variant?: "list" | "past";
   isHighlighted?: boolean;
+  canManage?: boolean; // false = this user didn't create it and isn't admin/campus_admin
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   onHighlight?: (campaign: Campaign) => void;
@@ -48,12 +50,12 @@ export default function CampaignAdminCard({
         <p className="mt-1 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">{campaign.description}</p>
 
         <div className="mt-4 flex items-center gap-2 pt-1">
-          {variant !== "past" && (
+          {variant !== "past" && canManage && (
             <button type="button" onClick={() => onEdit?.(campaign.id)} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
               <Pencil size={13} /> Edit
             </button>
           )}
-          {canHighlight && (
+          {canHighlight && canManage && (
             <button
               type="button"
               onClick={() => onHighlight?.(campaign)}
@@ -62,12 +64,12 @@ export default function CampaignAdminCard({
               <Sparkles size={13} /> {isHighlighted ? "Highlighted" : "Highlight"}
             </button>
           )}
-          {canHighlight && isHighlighted && onManagePhotos && (
+          {canHighlight && isHighlighted && canManage && onManagePhotos && (
             <button type="button" onClick={() => onManagePhotos(campaign)} aria-label="Manage highlight photos" className="flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
               <Images size={14} />
             </button>
           )}
-          {variant === "list" && (
+          {variant === "list" && canManage && (
             <button type="button" onClick={handleDelete} aria-label="Delete campaign" className="flex items-center justify-center rounded-lg border border-red-100 px-3 py-2 text-red-500 hover:bg-red-50 dark:border-red-900/40 dark:hover:bg-red-950/30">
               <Trash2 size={14} />
             </button>

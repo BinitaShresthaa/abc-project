@@ -5,12 +5,13 @@ import { mockStudents, getClassmates } from "@/lib/mock-students";
 import { passoutStudentColumns, passoutStudentFilters } from "@/components/dashboard/table/columns/passout-student-columns";
 import { studentDetailConfig } from "@/components/dashboard/table/columns/student-columns";
 import { formatProgress } from "@/lib/academic-progress";
+import { sortByName } from "@/lib/sort-utils";
 import DataTable from "@/components/dashboard/table/DataTable";
 import DetailCard from "@/components/dashboard/table/DetailCard";
 import type { Student } from "@/lib/mock-students";
 
 export default function PassoutStudentListView() {
-  const passoutStudents = mockStudents.filter((s) => s.status === "passout");
+  const passoutStudents = sortByName(mockStudents.filter((s) => s.status === "passout"));
 
   // No student selected by default — the list stays full width. Clicking a
   // row opens the profile panel as an overlay; the panel's × closes it again.
@@ -37,13 +38,13 @@ export default function PassoutStudentListView() {
 
   return (
     <div className="relative">
-      <DataTable
+      <DataTable<Student>
         title="Passout Students"
-        data={passoutStudents as unknown as Record<string, unknown>[]}
-        columns={passoutStudentColumns as unknown as Parameters<typeof DataTable>[0]["columns"]}
-        filters={passoutStudentFilters as unknown as Parameters<typeof DataTable>[0]["filters"]}
+        data={passoutStudents}
+        columns={passoutStudentColumns}
+        filters={passoutStudentFilters}
         rowIdKey="id"
-        onRowClick={(r) => setSelectedId((r as unknown as Student).id)}
+        onRowClick={(r) => setSelectedId(r.id)}
         activeRowId={selectedId}
       />
 

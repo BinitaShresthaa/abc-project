@@ -16,65 +16,95 @@ export default function ContactPage() {
 
   return (
     <main className="overflow-x-hidden bg-white text-slate-800">
-      {/* ---------------- HERO ---------------- */}
-      <section className="relative overflow-hidden bg-primary py-16 text-white sm:py-20 lg:py-24">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(45deg, transparent 0 26px, rgba(255,255,255,.6) 26px 27px), repeating-linear-gradient(-45deg, transparent 0 26px, rgba(255,255,255,.6) 26px 27px)",
-          }}
+{/* ---------------- HERO ---------------- */}
+<section className="relative overflow-hidden bg-[#E8F0F7] pb-10 pt-10 sm:pb-12 sm:pt-12 lg:pb-14 lg:pt-14">  <Container className="relative z-10 grid gap-8 lg:grid-cols-[1fr_1.15fr] lg:items-center lg:gap-12">
+    <Reveal>
+      <div className="p-2 sm:p-3">
+        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+          Faculty Directory · Contact Persons
+        </span>
+        <h1 className="mt-3 max-w-xl text-2xl font-bold leading-[1.15] text-[#172B3A] sm:text-3xl lg:text-4xl">
+          Reach the people behind every faculty.
+        </h1>
+        <p className="mt-3 max-w-lg text-sm leading-relaxed text-gray-600 sm:text-[0.95rem]">
+          Contact Persons are the Faculty Focal individuals responsible
+          for their department&rsquo;s student records, academic
+          queries, and day-to-day coordination — your first point of
+          call at Aadikavi Bhanubhakta Campus.
+        </p>
+
+        <div className="mt-5 grid max-w-md grid-cols-3 gap-4 border-t border-primary/10 pt-4">
+          <div>
+            <div className="text-lg font-bold sm:text-xl" style={{ color: "#800000" }}>
+              {facultyMembers.length}
+            </div>
+            <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: "#800000" }}>
+              Contacts Listed
+            </div>
+          </div>
+          <div className="border-l border-primary/10 pl-4">
+            <div className="text-lg font-bold sm:text-xl" style={{ color: "#800000" }}>
+              11
+            </div>
+            <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: "#800000" }}>
+              Programs
+            </div>
+          </div>
+          <div className="border-l border-primary/10 pl-4">
+            <div className="text-lg font-bold sm:text-xl" style={{ color: "#800000" }}>
+              39yrs
+            </div>
+            <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: "#800000" }}>
+              Since 1987
+            </div>
+          </div>
+        </div>
+      </div>
+    </Reveal>
+
+    {/* Wider photo — shallower aspect ratio so it reads as a wide banner
+        rather than a tall block, and takes up more horizontal room
+        relative to the text column (1.15fr vs 1fr above). */}
+    <Reveal delay={150}>
+      <div className="relative aspect-[16/10] overflow-hidden rounded-[2.5rem] shadow-xl sm:rounded-[3rem]">
+        <Image
+          src="/campaigns/campaign.jpg"
+          alt="Aadikavi Bhanubhakta Campus"
+          fill
+          sizes="(max-width: 1024px) 90vw, 640px"
+          className="object-cover"
         />
-        <Container className="relative grid gap-10 lg:grid-cols-[1.25fr_0.9fr] lg:items-end">
-          <Reveal>
-            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/80">
-              Faculty Directory · Contact Persons
-            </span>
-            <h1 className="mt-4 max-w-xl text-3xl font-bold leading-[1.1] sm:text-4xl lg:text-5xl">
-              Reach the people behind every faculty.
-            </h1>
-            <p className="mt-5 max-w-lg text-[0.95rem] leading-relaxed text-white/90 sm:text-base">
-              Contact Persons are the Faculty Focal individuals responsible
-              for their department&rsquo;s student records, academic
-              queries, and day-to-day coordination — your first point of
-              call at Aadikavi Bhanubhakta Campus.
-            </p>
+      </div>
+    </Reveal>
+  </Container>
 
-            <div className="mt-8 grid max-w-md grid-cols-3 gap-4 border-t border-white/20 pt-5">
-              <div>
-                <div className="text-xl font-bold sm:text-2xl">{facultyMembers.length}</div>
-                <div className="mt-0.5 text-[11px] uppercase tracking-wide text-white/80">
-                  Contacts Listed
-                </div>
-              </div>
-              <div className="border-l border-white/20 pl-4">
-                <div className="text-xl font-bold sm:text-2xl">11</div>
-                <div className="mt-0.5 text-[11px] uppercase tracking-wide text-white/80">
-                  Programs
-                </div>
-              </div>
-              <div className="border-l border-white/20 pl-4">
-                <div className="text-xl font-bold sm:text-2xl">39yrs</div>
-                <div className="mt-0.5 text-[11px] uppercase tracking-wide text-white/80">
-                  Since 1987
-                </div>
-              </div>
-            </div>
-          </Reveal>
-
-          <Reveal delay={150}>
-            <div className="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm sm:p-7">
-              <span className="text-4xl leading-none text-white/80">&ldquo;</span>
-              <p className="mt-1 text-[1.05rem] italic leading-relaxed text-white/90">
-                Knowledge finds its true worth only when it is shared — reach
-                out, and someone here will guide you home.
-              </p>
-              <p className="mt-4 text-sm text-white/80">— Campus Administration</p>
-            </div>
-          </Reveal>
-        </Container>
-      </section>
-
+  {/* Thin divider strip separating hero from the next section, so the
+      two sections read as visually distinct rather than blending
+      together. */}
+</section>
+{/* Decorative divider between hero and the next section — a soft wave
+    curve plus a centered accent dot, instead of a plain border line. */}
+<div className="relative h-16 sm:h-20">
+  <svg
+    viewBox="0 0 1440 80"
+    preserveAspectRatio="none"
+    className="absolute inset-x-0 bottom-0 h-full w-full"
+  >
+    <path
+      fill="white"
+      d="M0,40 C360,10 1080,70 1440,40 L1440,80 L0,80 Z"
+    />
+  </svg>
+  <div className="absolute inset-x-0 bottom-3 flex items-center justify-center gap-3 sm:bottom-4">
+    <span className="h-px w-16 bg-primary/20 sm:w-24" />
+    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary sm:h-9 sm:w-9">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        <path d="M12 2 4 6v6c0 5 3.4 9.4 8 10 4.6-.6 8-5 8-10V6z" />
+      </svg>
+    </span>
+    <span className="h-px w-16 bg-primary/20 sm:w-24" />
+  </div>
+</div>
       {/* ---------------- INTRO / WHAT IS A CONTACT PERSON ---------------- */}
       <section className="py-16 sm:py-20">
         <Container className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">

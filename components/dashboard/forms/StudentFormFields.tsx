@@ -6,7 +6,8 @@ import FormField from "./FormField";
 import PhotoUploadField from "./PhotoUploadField";
 import GenderSelect from "./GenderSelect";
 import YearSemesterSelect from "@/components/dashboard/table/YearSemesterSelect";
-
+import NepaliDatePicker from "./NepaliDatePicker";
+import ScrollDropdown from "./ScrollDropdown";
 export const inputClass =
   "w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition-colors focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200";
 
@@ -78,13 +79,13 @@ export default function StudentFormFields({
         </FormField>
 
         <FormField label="Faculty" required>
-          <select value={form.faculty} onChange={(e) => onFacultyChange(e.target.value)} className={inputClass}>
-            <option value="" disabled>Select faculty</option>
-            {facultyList.map((f) => (
-              <option key={f} value={f}>{f}</option>
-            ))}
-          </select>
-        </FormField>
+  <ScrollDropdown
+    value={form.faculty}
+    options={facultyList.map((f) => ({ value: f, label: f }))}
+    placeholder="Select faculty"
+    onChange={(v) => onFacultyChange(String(v))}
+  />
+</FormField>
 
         <FormField label="Contact No." required error={contactError}>
           <input
@@ -106,8 +107,8 @@ export default function StudentFormFields({
         </FormField>
 
         <FormField label="Date of Birth" error={dobError}>
-          <input type="date" value={form.dob} onChange={(e) => update("dob", e.target.value)} className={inputClass} />
-        </FormField>
+  <NepaliDatePicker value={form.dob} onChange={(iso) => update("dob", iso)} />
+</FormField>
 
         <FormField label="Address">
           <input

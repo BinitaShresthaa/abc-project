@@ -7,14 +7,17 @@ import { formatProgress } from "@/lib/academic-progress";
 import { sortByName } from "@/lib/sort-utils";
 import DataTable from "@/components/dashboard/table/DataTable";
 import DetailCard from "@/components/dashboard/table/DetailCard";
+import { useDashboardUser } from "@/lib/dashboard-user-context";
 import type { Student } from "@/lib/mock-students";
 import type { RowAction, BulkAction } from "@/components/dashboard/table/types";
 import type { DashboardViewProps } from "@/lib/view-types";
 
 export default function StudentListView({ onEditStudent }: Partial<DashboardViewProps>) {
+  const user = useDashboardUser();
+  const canManageStudents = user?.role.name !== "contact_person";
+
   const [, forceRefresh] = useState(0);
   const activeStudents = sortByName(mockStudents.filter((s) => s.status === "active"));
-  type TableStudent = Student & Record<string, unknown>;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedStudent = selectedId ? activeStudents.find((s) => s.id === selectedId) ?? null : null;
@@ -39,41 +42,47 @@ export default function StudentListView({ onEditStudent }: Partial<DashboardView
     forceRefresh((n) => n + 1);
   }
 
-  const rowActions: RowAction<TableStudent>[] = [
-    { label: "Edit", onSelect: (r) => onEditStudent?.(r.id) },
-    { label: "Mark as Left", onSelect: (r) => handleStatusChange(r, "left") },
-    { label: "Mark as Passout", onSelect: (r) => handleStatusChange(r, "passout") },
-  ];
+  const rowActions: RowAction<Student>[] = canManageStudents
+    ? [
+        { label: "Edit", onSelect: (r) => onEditStudent?.(r.id) },
+        { label: "Mark as Left", onSelect: (r) => handleStatusChange(r, "left") },
+        { label: "Mark as Passout", onSelect: (r) => handleStatusChange(r, "passout") },
+      ]
+    : [];
 
-  const bulkActions: BulkAction<TableStudent>[] = [
-    {
-      label: "Mark as Passout",
-      onSelect: (rows) => {
-        rows.forEach((r) => setStudentStatus(r.id, "passout"));
-        forceRefresh((n) => n + 1);
-      },
-    },
-    {
-      label: "Mark as Left",
-      onSelect: (rows) => {
-        rows.forEach((r) => setStudentStatus(r.id, "left"));
-        forceRefresh((n) => n + 1);
-      },
-    },
-  ];
+  const bulkActions: BulkAction<Student>[] = canManageStudents
+    ? [
+        {
+          label: "Mark as Passout",
+          onSelect: (rows) => {
+            rows.forEach((r) => setStudentStatus(r.id, "passout"));
+            forceRefresh((n) => n + 1);
+          },
+        },
+        {
+          label: "Mark as Left",
+          onSelect: (rows) => {
+            rows.forEach((r) => setStudentStatus(r.id, "left"));
+            forceRefresh((n) => n + 1);
+          },
+        },
+      ]
+    : [];
 
   return (
     <div className="relative">
-      <DataTable<TableStudent>
+      <DataTable<Student>
         title="Student List"
-        data={activeStudents as TableStudent[]}
-        columns={studentColumns as any}
+        data={activeStudents}
+        columns={studentColumns}
         filters={studentFilters}
         rowIdKey="id"
         rowActions={rowActions}
         bulkActions={bulkActions}
         onRowClick={(r) => setSelectedId(r.id)}
         activeRowId={selectedId}
+        showSelectionBadge={!canManageStudents}
+
       />
 
       {selectedStudent && (
