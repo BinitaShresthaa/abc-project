@@ -1,7 +1,4 @@
-'use client';
-
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 interface BrandPanelProps {
   heading: string;
@@ -12,32 +9,9 @@ interface BrandPanelProps {
   cta?: { label: string; href?: string; onClick?: () => void };
 }
 
-// Browsers without View Transitions support just get a normal navigation —
-// no animation, no error.
-type DocumentWithViewTransitions = Document & {
-  startViewTransition?: (callback: () => void) => void;
-};
-
 export default function BrandPanel({ heading, description, showLogo, cta }: BrandPanelProps) {
-  const router = useRouter();
   const ctaClassName =
     'inline-block rounded-full border-[1.5px] border-white/70 px-9 py-3 text-[12.5px] font-semibold uppercase tracking-[1.5px] hover:bg-white/10 transition-colors';
-
-  const handleCtaLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    const href = cta?.href;
-    if (!href) return;
-    // Let modified clicks (open in new tab, etc.) behave normally.
-    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-
-    e.preventDefault();
-    const navigate = () => router.push(href);
-    const doc = document as DocumentWithViewTransitions;
-    if (doc.startViewTransition) {
-      doc.startViewTransition(navigate);
-    } else {
-      navigate();
-    }
-  };
 
   return (
     <>
@@ -51,7 +25,7 @@ export default function BrandPanel({ heading, description, showLogo, cta }: Bran
         {description}
       </p>
       {cta && cta.href && (
-        <Link href={cta.href} onClick={handleCtaLinkClick} className={ctaClassName}>
+        <Link href={cta.href} className={ctaClassName}>
           {cta.label}
         </Link>
       )}

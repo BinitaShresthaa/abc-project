@@ -10,6 +10,7 @@ import SetProfileView from '@/components/almuni-dashboard/SetProfileview';
 import ChangePasswordView from '@/components/almuni-dashboard/ChangePasswordView';
 import ProfileView from '@/components/almuni-dashboard/ProfileView';
 import StoryView from '@/components/almuni-dashboard/StoryView';
+import PrivacyView from '@/components/almuni-dashboard/PrivacyView';
 import type { NavKey } from '@/components/almuni-dashboard/navItems';
 
 export default function AlmuniDashboardPage() {
@@ -62,7 +63,15 @@ export default function AlmuniDashboardPage() {
         </main>
       ) : (
         <div className="max-w-[1600px] mx-auto flex">
-          <Sidebar active={active} onChange={handleNavChange} />
+          <Sidebar
+            active={active}
+            onChange={handleNavChange}
+            onSetProfile={() => {
+              setShowChangePassword(false);
+              setShowViewProfile(false);
+              setShowSetProfile(true);
+            }}
+          />
           <main className="flex-1 px-4 md:px-6 py-6 min-w-0">
             {showSetProfile ? (
               <SetProfileView onClose={() => setShowSetProfile(false)} />
@@ -73,6 +82,7 @@ export default function AlmuniDashboardPage() {
                 {active === 'home' && <HomeView />}
                 {active === 'story' && <StoryView />}
                 {active === 'alumni' && <AlumniListView />}
+                {active === 'privacy' && <PrivacyView />}
               </>
             )}
           </main>

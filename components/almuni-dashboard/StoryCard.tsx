@@ -38,38 +38,38 @@ export default function StoryCard({
     expanded || !isLong ? story.text : story.text.slice(0, TEXT_TRUNCATE_LENGTH).trimEnd() + '…';
 
   return (
-    <div className="rounded-2xl bg-[#0E76BD] py-1 px-1.5 shadow-[0_6px_18px_rgba(14,118,189,0.25)]">
-      {/* header — items-end for avatar/text, but the close button opts out with self-start */}
-      <div className="flex items-end gap-3 px-2 pb-3 pt-2">
-        <div className="w-16 h-16 ml-2 rounded-full bg-white overflow-hidden flex items-center justify-center shrink-0">
+    <div className="rounded-2xl bg-white border border-black/5 shadow-[0_1px_3px_rgba(11,90,147,0.06)] p-3">
+      {/* header — white background, name/faculty/date in graduated blue shades */}
+      <div className="flex items-end gap-3 px-2 pb-3 pt-1">
+        <div className="w-16 h-16 ml-2 rounded-full bg-[#EAF4FB] overflow-hidden flex items-center justify-center shrink-0">
           {alumni?.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={alumni.photo} alt={alumni.name} className="w-full h-full object-cover" />
           ) : (
-            <span className="text-[#8B87A3]">{avatarPlaceholderIcon}</span>
+            <span className="text-[#0E76BD]/60">{avatarPlaceholderIcon}</span>
           )}
         </div>
 
         <div className="flex-1 min-w-0 mb-1.5">
-          <p className="text-[15px] font-bold text-white truncate">{alumni?.name ?? 'Alumni'}</p>
-          {alumni && <p className="text-[12px] text-white/80 truncate">{alumni.faculty}</p>}
-          <p className="text-[11.5px] text-white/70 truncate">{story.postedAt}</p>
+          <p className="text-[15px] font-bold text-[#0E76BD] truncate">{alumni?.name ?? 'Alumni'}</p>
+          {alumni && <p className="text-[12px] text-[#0E76BD]/70 truncate">{alumni.faculty}</p>}
+          <p className="text-[11.5px] text-[#0E76BD]/50 truncate">{story.postedAt}</p>
         </div>
 
         <button
           type="button"
           onClick={onDismiss}
           aria-label="Dismiss story"
-          className="self-start shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white/80 hover:bg-white/15 hover:text-white transition-colors"
+          className="self-start shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-[#0E76BD]/60 hover:bg-[#EAF4FB] hover:text-[#0E76BD] transition-colors"
         >
           {closeIcon}
         </button>
       </div>
 
-      {/* white post box */}
-      <div className="bg-white rounded-xl overflow-hidden">
+      {/* content */}
+      <div className="rounded-xl overflow-hidden">
         <div className="px-4 pt-3 pb-2">
-          <p className="text-[15px] font-bold text-[#241B3A] text-center">{story.title}</p>
+          <p className="text-[15px] font-bold text-[#0E76BD] text-center">{story.title}</p>
         </div>
 
         {story.image && (

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import ProfileMenu from './ProfileMenu';
 import type { NavKey } from './navItems';
 import { searchIcon } from './icons';
+import { mockAlumni, CURRENT_ALUMNI_ID } from '@/lib/mock-alumni';
 
 interface TopbarProps {
   // Kept optional so existing callers that still pass these (in sync with
@@ -24,6 +25,10 @@ const chevronDownIcon = (
 export default function Topbar({ onSetProfile, onChangePassword, onViewProfile }: TopbarProps) {
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  // Stand-in for "the logged-in alumni" until real alumni sessions are wired
+  // up (see getCurrentAlumni() in lib/auth.ts) — same approach used elsewhere.
+  const currentAlumni = mockAlumni.find((a) => a.id === CURRENT_ALUMNI_ID);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -70,13 +75,18 @@ export default function Topbar({ onSetProfile, onChangePassword, onViewProfile }
             className="flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full hover:bg-[#F5F4FB] transition-colors"
           >
             <div className="w-9 h-9 rounded-full bg-[#EAF4FB] overflow-hidden flex items-center justify-center">
-              {/* e.g. <img src="/avatar.jpg" alt="Profile" className="w-full h-full object-cover" /> */}
+              {currentAlumni?.photo && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={currentAlumni.photo} alt={currentAlumni.name} className="w-full h-full object-cover" />
+              )}
             </div>
             <span className="text-[#8B87A3]">{chevronDownIcon}</span>
           </button>
 
           {profileOpen && (
             <ProfileMenu
+              userName={currentAlumni?.name}
+              userPhoto={currentAlumni?.photo}
               onViewProfile={() => {
                 setProfileOpen(false);
                 onViewProfile?.();
