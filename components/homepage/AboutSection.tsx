@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { aboutPillars, aboutSite, statistics } from "@/data/homepage/misc";
 import Reveal from "./Reveal";
+import { JSX } from "react/jsx-runtime";
 
 const pillarIcons: Record<string, JSX.Element> = {
   student: (

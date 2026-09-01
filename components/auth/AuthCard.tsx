@@ -40,7 +40,6 @@ export default function AuthCard({ panelSide, branding, children, fontClassName 
 
         {/* DESKTOP */}
         <div
-          style={{ viewTransitionName: 'auth-blue-panel' }}
           className={`hidden md:flex absolute top-0 h-full w-[48%] flex-col items-center justify-center text-center text-white px-10
                      bg-[linear-gradient(150deg,#0B5A93_0%,#0E76BD_55%,#3E97D6_100%)]
                      transition-all duration-700 ease-in-out

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { JSX, useEffect, useRef, useState, type ReactNode } from "react";
 
 export default function Reveal({
   children,

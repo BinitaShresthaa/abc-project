@@ -1,19 +1,27 @@
 'use client';
 
 import { useState } from 'react';
-import { userIcon, lockIcon, eyeIcon, logOutIcon, chevronRightIcon, arrowLeftIcon } from './icons';
+import { userIcon, lockIcon, eyeIcon, logOutIcon, arrowLeftIcon } from './icons';
 
 type View = 'menu' | 'display';
 type Visibility = 'public' | 'private';
 
 interface ProfileMenuProps {
   userName?: string;
+  userPhoto?: string;
   onViewProfile?: () => void;
   onSetProfile?: () => void;
   onChangePassword?: () => void;
   onVisibilityChange?: (visibility: Visibility) => void;
   onLogOut?: () => void;
 }
+
+const avatarPlaceholderIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10">
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 20c0-4 3.5-6 8-6s8 2 8 6" />
+  </svg>
+);
 
 const visibilityOptions: { key: Visibility; label: string; description: string }[] = [
   {
@@ -30,6 +38,7 @@ const visibilityOptions: { key: Visibility; label: string; description: string }
 
 export default function ProfileMenu({
   userName = 'Your Name',
+  userPhoto,
   onViewProfile,
   onSetProfile,
   onChangePassword,
@@ -92,63 +101,60 @@ export default function ProfileMenu({
     );
   }
 
-  // --- main menu ---
+  // --- main menu — blue banner + overlapping photo + plain icon/label list ---
   const menuItems = [
+    { icon: userIcon, label: 'View Profile', onClick: onViewProfile },
     { icon: userIcon, label: 'Set Profile', onClick: onSetProfile },
     { icon: lockIcon, label: 'Change Password', onClick: onChangePassword },
     { icon: eyeIcon, label: 'Display Profile', onClick: () => setView('display') },
   ];
 
   return (
-    <div className="absolute right-0 top-full mt-2 w-[320px] rounded-2xl bg-white shadow-[0_16px_40px_rgba(11,90,147,0.18)] border border-black/5 p-3 z-50">
+    <div className="absolute right-0 top-full mt-2 w-[320px] rounded-2xl bg-white shadow-[0_16px_40px_rgba(11,90,147,0.18)] border border-black/5 overflow-hidden z-50">
+      {/* blue banner with name */}
+      <div className="bg-[#0E76BD] pt-6 pb-14 text-center px-4">
+        <p className="text-white text-[16px] font-semibold truncate">{userName}</p>
+      </div>
 
-      <div className="flex items-center gap-3 px-2 pt-1 pb-3">
-        <div className="w-12 h-12 rounded-full bg-[#EAF4FB] overflow-hidden flex items-center justify-center shrink-0">
-          {/* e.g. <img src="/avatar.jpg" alt="" className="w-full h-full object-cover" /> */}
+      {/* large photo overlapping the banner/white boundary */}
+      <div className="flex justify-center -mt-12">
+        <div className="w-24 h-24 rounded-full border-4 border-white bg-[#EAF4FB] overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.15)] flex items-center justify-center">
+          {userPhoto ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={userPhoto} alt={userName} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-[#8B87A3]">{avatarPlaceholderIcon}</span>
+          )}
         </div>
-        <p className="text-[15px] font-semibold text-[#241B3A] truncate">{userName}</p>
       </div>
 
-      <div className="h-px bg-black/10 mx-2" />
+      {/* menu list — plain icon + label rows, no chevrons */}
+      <div className="px-4 pt-4 pb-4">
+        <div className="space-y-1">
+          {menuItems.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={item.onClick}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F5F4FB] transition-colors text-left"
+            >
+              <span className="text-[#0E76BD] shrink-0">{item.icon}</span>
+              <span className="text-[15px] font-medium text-[#241B3A]">{item.label}</span>
+            </button>
+          ))}
+        </div>
 
-      <button
-        type="button"
-        onClick={onViewProfile}
-        className="w-full flex items-center justify-center gap-2 mt-3 mb-2 py-2.5 rounded-xl bg-[#F0F2F5] hover:bg-[#E7EAEE] text-sm font-semibold text-[#241B3A] transition-colors"
-      >
-        {userIcon}
-        View Profile
-      </button>
+        <div className="h-px bg-black/10 my-2" />
 
-      <div className="py-1">
-        {menuItems.map((item) => (
-          <button
-            key={item.label}
-            type="button"
-            onClick={item.onClick}
-            className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-[#F5F4FB] transition-colors text-left"
-          >
-            <span className="w-9 h-9 rounded-full bg-[#F0F2F5] flex items-center justify-center text-[#241B3A] shrink-0">
-              {item.icon}
-            </span>
-            <span className="flex-1 text-sm font-medium text-[#241B3A]">{item.label}</span>
-            <span className="text-[#8B87A3]">{chevronRightIcon}</span>
-          </button>
-        ))}
+        <button
+          type="button"
+          onClick={onLogOut}
+          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-red-50 transition-colors text-left"
+        >
+          <span className="text-red-500 shrink-0">{logOutIcon}</span>
+          <span className="text-[15px] font-medium text-red-500">Log out</span>
+        </button>
       </div>
-
-      <div className="h-px bg-black/10 mx-2 my-1" />
-
-      <button
-        type="button"
-        onClick={onLogOut}
-        className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-[#F5F4FB] transition-colors text-left"
-      >
-        <span className="w-9 h-9 rounded-full bg-[#F0F2F5] flex items-center justify-center text-[#241B3A] shrink-0">
-          {logOutIcon}
-        </span>
-        <span className="flex-1 text-sm font-medium text-[#241B3A]">Log out</span>
-      </button>
     </div>
   );
 }

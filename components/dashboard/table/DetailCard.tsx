@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Avatar from "./Avatar";
 import type { DetailCardConfig, DetailSectionIcon } from "./types";
 
@@ -11,29 +11,24 @@ import type { DetailCardConfig, DetailSectionIcon } from "./types";
 // into a fixed/absolute-positioned wrapper that overlaps the list rather than
 // squeezing it — see StudentListView.tsx.
 //
-// `onPrev` / `onNext` are optional: pass them to enable a scroll-to-browse
-// classmate navigator. Scrolling ANYWHERE on the card body (mouse wheel or
-// trackpad, up or down) switches to the previous/next classmate — there's
-// no separate hit-target to find. A thin decorative bar on the right edge
-// just hints "this is browsable"; it isn't required to be under the cursor.
-// Omit both props and the card is a plain static profile with no scroll
-// interaction at all (falls back to normal content scrolling if the profile
-// content is ever taller than the card).
+// `onPrev` / `onNext` are optional: pass them to enable classmate navigation.
+// When present, a small round "<" / ">" button floats on the left/right edge
+// of the card — click it to jump to the previous/next classmate. Each click
+// slides the new profile in from the direction you clicked (next slides in
+// from the right, prev from the left), so a single click is unmistakably
+// visible even if you're not watching closely. Omit either prop (e.g.
+// because you're already at the first/last classmate) and that side's
+// button simply doesn't render. Omit both and the card has no navigation at
+// all, just the profile.
 //
 // IMPORTANT — scope: the caller decides who counts as a "classmate" by
 // what it passes into onPrev/onNext (see lib/mock-students.ts's
 // getClassmates helper, used by StudentListView.tsx / LeftStudentListView.tsx
 // / PassoutStudentListView.tsx). getClassmates already filters to the exact
-// same faculty + batch + year/semester as the student being viewed, so
-// scrolling here only ever moves within that one class — it never crosses
-// into a different faculty, batch, or semester. This component itself has
-// no faculty/batch logic; it just calls whatever onPrev/onNext it's given.
-//
-// Trade-off: while onPrev/onNext are provided, every scroll gesture on the
-// card is captured for navigation, so the profile content itself won't
-// natively scroll even if it's taller than the card. In practice the
-// content here is short enough that this doesn't come up — if you later add
-// enough fields that it does, that's the first thing to revisit.
+// same faculty + batch + year/semester as the student being viewed, so these
+// buttons only ever move within that one class — they never cross into a
+// different faculty, batch, or semester. This component itself has no
+// faculty/batch logic; it just calls whatever onPrev/onNext it's given.
 export default function DetailCard<T>({
   row,
   config,
@@ -53,143 +48,187 @@ export default function DetailCard<T>({
   emptyLabel?: string;
   positionLabel?: string;
 }) {
-  const showNav = onPrev !== undefined || onNext !== undefined;
-  const bodyRef = useRef<HTMLDivElement>(null);
+  // Tracks which direction the last navigation was, purely so the entrance
+  // animation below can slide from the matching side — this is what makes
+  // every single click visibly, directionally obvious instead of an
+  // ambiguous instant swap.
+  const [direction, setDirection] = useState<"prev" | "next">("next");
 
-  // Keep the latest callbacks in refs. The native wheel listener below reads
-  // from these instead of closing over onPrev/onNext directly, so the
-  // listener never needs to be torn down and reattached just because the
-  // parent re-renders with new function identities (which happens on every
-  // render if the parent passes inline arrow functions, e.g.
-  // onNext={() => setIndex(i => i + 1)}). This is what lets repeated scroll
-  // gestures keep advancing instead of only firing once.
-  const onPrevRef = useRef(onPrev);
-  const onNextRef = useRef(onNext);
+  function handlePrevClick() {
+    setDirection("prev");
+    onPrev?.();
+  }
+
+  function handleNextClick() {
+    setDirection("next");
+    onNext?.();
+  }
+
+  // Keyboard support: Left/Right arrow keys also step through classmates,
+  // in addition to clicking the < / > buttons. Scoped to the whole window
+  // rather than just the card, since the card itself has no natural focus
+  // target to attach a local key handler to — but we skip handling the key
+  // entirely whenever focus is inside a text input, textarea, or any
+  // contentEditable element elsewhere on the page (e.g. the search box),
+  // so this never hijacks normal typing/cursor-movement there. This effect
+  // is intentionally allowed to re-attach on every onPrev/onNext change
+  // (unlike the old wheel handler) since keydown handling has no
+  // accumulated state that a teardown could lose mid-gesture.
   useEffect(() => {
-    onPrevRef.current = onPrev;
-    onNextRef.current = onNext;
-  });
+    function handleKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      const isTypingContext =
+        !!target &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      if (isTypingContext) return;
 
-  useEffect(() => {
-    const el = bodyRef.current;
-    if (!el || !showNav) return;
-
-    // Accumulates delta across a scroll gesture — a mouse wheel fires one big
-    // delta per "click", a trackpad fires many tiny ones per swipe, and
-    // Firefox reports "lines" instead of pixels. This normalizes all three
-    // into one classmate-step per gesture instead of firing constantly.
-    // Attached natively (not via React's onWheel) because React's onWheel
-    // is passive by default, which silently ignores preventDefault().
-    let accum = 0;
-    let locked = false;
-
-    function handleWheel(e: WheelEvent) {
-      e.preventDefault();
-      if (locked) return;
-
-      const delta = e.deltaMode === 1 ? e.deltaY * 20 : e.deltaY; // deltaMode 1 = "line" mode (Firefox)
-      accum += delta;
-
-      const THRESHOLD = 40;
-      if (Math.abs(accum) < THRESHOLD) return;
-
-      if (accum > 0) onNextRef.current?.();
-      else onPrevRef.current?.();
-
-      accum = 0;
-      locked = true;
-      window.setTimeout(() => {
-        locked = false;
-      }, 350);
+      if (e.key === "ArrowLeft" && onPrev) {
+        e.preventDefault();
+        handlePrevClick();
+      } else if (e.key === "ArrowRight" && onNext) {
+        e.preventDefault();
+        handleNextClick();
+      }
     }
 
-    el.addEventListener("wheel", handleWheel, { passive: false });
-    return () => el.removeEventListener("wheel", handleWheel);
-    // Re-run only when nav turns on/off, not on every onPrev/onNext identity
-    // change — the refs above handle keeping the callbacks current.
-  }, [showNav]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onPrev, onNext]);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
-      {/* header bar — stays fixed while the body below handles scroll */}
-      <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
-        <div className="min-w-0">
-          <h3 className="text-base font-semibold text-slate-700 dark:text-slate-100">{title}</h3>
-          {positionLabel && (
-            <p className="mt-0.5 truncate text-xs text-slate-400 dark:text-slate-500">{positionLabel}</p>
+    // Outer wrapper: relative for positioning context, but deliberately NO
+    // overflow-hidden here — that's what lets the < / > buttons below sit
+    // fully outside the card's rounded edge without being clipped in half.
+    <div className="relative h-full">
+      {/* inner shell: this is where overflow-hidden actually belongs, since
+          it's what keeps the header/body content clipped to the rounded
+          corners. */}
+      <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+        {/* header bar — stays fixed while the body below scrolls */}
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+          <div className="min-w-0">
+            <h3 className="text-base font-semibold text-slate-700 dark:text-slate-100">{title}</h3>
+            {positionLabel && (
+              <p className="mt-0.5 truncate text-xs text-slate-400 dark:text-slate-500">{positionLabel}</p>
+            )}
+          </div>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
           )}
         </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
-        )}
+
+        {/* body — plain normal scrolling, no wheel interception. Navigation
+            happens purely through the < / > buttons below. overflow-hidden
+            here (not overflow-y-auto alone) so the slide-in animation
+            doesn't briefly show a horizontal scrollbar as content translates
+            in. Extra horizontal padding (px-12 instead of px-5) is reserved
+            on both sides whenever nav buttons are showing, so wrapped text
+            (like a long email address) never reaches under the button —
+            this holds regardless of how wide the card itself is. */}
+        <div
+          className={`styled-scrollbar flex-1 overflow-hidden overflow-y-auto py-5 ${
+            onPrev || onNext ? "px-12" : "px-5"
+          }`}
+        >
+          {!row ? (
+            <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-sm text-slate-400">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-300 dark:text-slate-600">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 21c0-4 4-7 8-7s8 3 8 7" />
+              </svg>
+              {emptyLabel}
+            </div>
+          ) : (
+            <DetailCardBody
+              // Keying by a stable per-row identity forces React to remount
+              // this subtree on every classmate change, which replays the
+              // slide-in animation below every single time — that's what
+              // guarantees each click is visibly, individually noticeable.
+              key={config.getId?.(row) ?? config.getName(row)}
+              row={row}
+              config={config}
+              direction={direction}
+            />
+          )}
+        </div>
       </div>
 
-      {/* body: the ENTIRE area below is the scroll-to-browse zone when
-          showNav is true — scrolling up or down anywhere in here (not just
-          a specific strip) steps to the prev/next classmate. When showNav
-          is false, this just scrolls the profile content normally via
-          overflow-y-auto. */}
-      <div
-        ref={bodyRef}
-        title={showNav ? "Scroll to browse this class" : undefined}
-        aria-label={showNav ? "Scroll to browse classmates in this batch and semester" : undefined}
-        className={`styled-scrollbar relative flex-1 overflow-y-auto p-5 ${showNav ? "cursor-ns-resize" : ""}`}
-      >
-        {!row ? (
-          <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-sm text-slate-400">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-300 dark:text-slate-600">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4 21c0-4 4-7 8-7s8 3 8 7" />
-            </svg>
-            {emptyLabel}
-          </div>
-        ) : (
-          <DetailCardBody
-            // Keying by a stable per-row identity forces React to unmount +
-            // remount this subtree whenever the classmate changes, which is
-            // what makes the entrance animation below replay every time —
-            // without a changing key, React would just patch the existing
-            // DOM in place and nothing would visibly animate.
-            key={config.getId?.(row) ?? config.getName(row)}
-            row={row}
-            config={config}
-          />
-        )}
+      {/* Previous-classmate button — sits INSIDE the card near the left
+          edge, vertically centered. The body above reserves extra padding
+          (px-12) whenever this button is shown, so it never overlaps
+          wrapped text like a long email address. Positioned relative to the
+          outer (non-clipping) wrapper so it isn't affected by the inner
+          shell's overflow-hidden either way. Only rendered when onPrev is
+          actually provided (i.e. not already at the first classmate in the
+          class). type="button" guards against any accidental implicit
+          form-submit behavior if this ever ends up nested inside a <form>
+          upstream. */}
+      {onPrev && (
+        <button
+          type="button"
+          onClick={handlePrevClick}
+          aria-label="Previous classmate"
+          title="Previous classmate"
+          className="absolute left-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white text-slate-500 shadow-md ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-700 active:scale-90 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+      )}
 
-        {/* purely decorative "this is browsable" hint on the right edge —
-            not a hit target, pointer-events-none so it never intercepts
-            anything; the whole body above already handles the wheel. */}
-        {showNav && (
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute right-1.5 top-3 bottom-3 w-1.5 rounded-full bg-slate-200 dark:bg-slate-700"
-          />
-        )}
+      {/* Next-classmate button — mirrors the previous button on the right
+          edge, also inside the card now. Only rendered when onNext is
+          provided (not at the last classmate). */}
+      {onNext && (
+        <button
+          type="button"
+          onClick={handleNextClick}
+          aria-label="Next classmate"
+          title="Next classmate"
+          className="absolute right-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white text-slate-500 shadow-md ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-700 active:scale-90 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </button>
+      )}
 
-        {/* Keyframes for the classmate-switch entrance animation above.
-            Injected inline so this component has no extra CSS-file
-            dependency — safe to duplicate across instances since the
-            keyframe name is scoped to this file's intent. */}
-        <style>{`
-          @keyframes detailCardEnter {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-        `}</style>
-      </div>
+      {/* Keyframes for the directional classmate-switch entrance animation
+          used above. Injected inline so this component has no extra
+          CSS-file dependency. */}
+      <style>{`
+        @keyframes detailCardSlideFromRight {
+          from { opacity: 0; transform: translateX(20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes detailCardSlideFromLeft {
+          from { opacity: 0; transform: translateX(-20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+      `}</style>
     </div>
   );
 }
 
-function DetailCardBody<T>({ row, config }: { row: T; config: DetailCardConfig<T> }) {
+function DetailCardBody<T>({
+  row,
+  config,
+  direction,
+}: {
+  row: T;
+  config: DetailCardConfig<T>;
+  direction: "prev" | "next";
+}) {
   const name = config.getName(row);
   const photo = config.getPhoto?.(row);
   const id = config.getId?.(row);
@@ -197,7 +236,11 @@ function DetailCardBody<T>({ row, config }: { row: T; config: DetailCardConfig<T
   const sections = config.getSections?.(row) ?? [];
 
   return (
-    <>
+    <div
+      style={{
+        animation: `${direction === "next" ? "detailCardSlideFromRight" : "detailCardSlideFromLeft"} 220ms ease-out`,
+      }}
+    >
       {/* identity row: photo left, badges/name/id stacked right */}
       <div className="flex items-start gap-4">
         <Avatar name={name} photo={photo} size={64} shape="square" />
@@ -240,6 +283,7 @@ function DetailCardBody<T>({ row, config }: { row: T; config: DetailCardConfig<T
             </div>
             {section.actionLabel && (
               <button
+                type="button"
                 onClick={section.onAction}
                 className="shrink-0 text-xs font-medium text-primary hover:underline"
               >
@@ -264,7 +308,7 @@ function DetailCardBody<T>({ row, config }: { row: T; config: DetailCardConfig<T
           </div>
         </div>
       ))}
-    </>
+    </div>
   );
 }
 

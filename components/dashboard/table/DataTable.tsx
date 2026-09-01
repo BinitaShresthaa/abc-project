@@ -40,7 +40,12 @@ export default function DataTable<T extends object>({
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [printMenuOpen, setPrintMenuOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>("csv");
-  const [page, setPage] = useState(1);
+  const [internalPage, setInternalPage] = useState(1);
+
+  // Controlled if the parent supplies both `page` and `onPageChange`;
+  // otherwise falls back to the table's own internal state.
+  const page = controlledPage ?? internalPage;
+  const setPage = onPageChange ?? setInternalPage;
 
   const filterOptions = useMemo(() => {
     const map: Record<string, string[]> = {};
@@ -353,8 +358,11 @@ export default function DataTable<T extends object>({
 
         {totalPages > 1 && (
           <div className="flex items-center gap-1">
+            {/* NOTE: these pass an explicit target page number rather than a
+                functional updater — `setPage` can be `onPageChange`, which only
+                accepts a plain number, not a `(prev) => next` callback. */}
             <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => setPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
               className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
               aria-label="Previous page"
@@ -381,7 +389,7 @@ export default function DataTable<T extends object>({
               ))}
 
             <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
               className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
               aria-label="Next page"
