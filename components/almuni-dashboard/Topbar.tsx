@@ -22,6 +22,13 @@ const chevronDownIcon = (
   </svg>
 );
 
+const avatarPlaceholderIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 20c0-4 3.5-6 8-6s8 2 8 6" />
+  </svg>
+);
+
 export default function Topbar({ onSetProfile, onChangePassword, onViewProfile }: TopbarProps) {
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -75,9 +82,11 @@ export default function Topbar({ onSetProfile, onChangePassword, onViewProfile }
             className="flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full hover:bg-[#F5F4FB] transition-colors"
           >
             <div className="w-9 h-9 rounded-full bg-[#EAF4FB] overflow-hidden flex items-center justify-center">
-              {currentAlumni?.photo && (
+              {currentAlumni?.photo ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={currentAlumni.photo} alt={currentAlumni.name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-[#8B87A3]">{avatarPlaceholderIcon}</span>
               )}
             </div>
             <span className="text-[#8B87A3]">{chevronDownIcon}</span>

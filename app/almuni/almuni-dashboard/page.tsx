@@ -66,6 +66,11 @@ export default function AlmuniDashboardPage() {
           <Sidebar
             active={active}
             onChange={handleNavChange}
+            onProfileClick={() => {
+              setShowSetProfile(false);
+              setShowChangePassword(false);
+              setShowViewProfile(true);
+            }}
             onSetProfile={() => {
               setShowChangePassword(false);
               setShowViewProfile(false);

@@ -139,7 +139,7 @@ export default function PrivacyView() {
             />
           </div>
         </div>
-      )}   
+      )}
 
       {/* Private — lock the whole profile */}
       {visibility === 'private' && (

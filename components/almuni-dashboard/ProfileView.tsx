@@ -1,14 +1,41 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { mockAlumni, CURRENT_ALUMNI_ID } from '@/lib/mock-alumni';
 import { arrowLeftIcon } from './icons';
 
 const avatarPlaceholderIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-11 h-11">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12">
     <circle cx="12" cy="8" r="4" />
     <path d="M4 20c0-4 3.5-6 8-6s8 2 8 6" />
   </svg>
 );
+
+function ProfileCard({ children }: { children: ReactNode }) {
+  return (
+    <div className="bg-white rounded-2xl border border-black/5 shadow-[0_1px_3px_rgba(11,90,147,0.06)] p-5 space-y-5">
+      {children}
+    </div>
+  );
+}
+
+function SubSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div>
+      <h3 className="text-[15px] font-bold text-[#241B3A] mb-3">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function ProfileRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[11.5px] text-[#8B87A3]">{label}</p>
+      <p className="text-[14px] font-medium text-[#241B3A]">{value}</p>
+    </div>
+  );
+}
 
 export default function ProfileView({
   onClose,
@@ -33,7 +60,7 @@ export default function ProfileView({
         {arrowLeftIcon}
       </button>
 
-      {/* single card — LinkedIn-style: solid blue cover, avatar hanging over
+      {/* header card — LinkedIn-style: solid blue cover, avatar hanging over
           the boundary on the left, name + Edit Profile on one row, with
           room below the name for the rest of the details. */}
       <div className="rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(11,90,147,0.06)]">
@@ -58,7 +85,7 @@ export default function ProfileView({
             <button
               type="button"
               onClick={onEditProfile}
-              className="shrink-0 px-5 py-2 rounded-full bg-[#F0F2F5] text-[#241B3A] text-sm font-semibold hover:bg-[#E7EAEE] transition-colors"
+              className="shrink-0 px-5 py-2 rounded-full bg-[#800000] text-white text-sm font-semibold hover:bg-[#6b0000] transition-colors"
             >
               Edit Profile
             </button>
@@ -77,6 +104,64 @@ export default function ProfileView({
             </span>
           </div>
         </div>
+      </div>
+
+      {/* About / Bio — full width */}
+      <ProfileCard>
+        <SubSection title="About">
+          <p className="text-[14px] text-[#241B3A] leading-relaxed whitespace-pre-line">
+            {alumni.bio || 'No bio added yet.'}
+          </p>
+        </SubSection>
+      </ProfileCard>
+
+      {/* two cards side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-4 items-start">
+        {/* left: Personal Detail + Contact */}
+        <ProfileCard>
+          <SubSection title="Personal Detail">
+            <div className="space-y-3">
+              <ProfileRow label="Birth Date" value={alumni.dob ?? '—'} />
+              <ProfileRow label="Gender" value={alumni.gender ?? '—'} />
+              <ProfileRow label="Location" value={alumni.address ?? '—'} />
+            </div>
+          </SubSection>
+
+          <div className="h-[2px] bg-[#800000]" />
+
+          <SubSection title="Contact">
+            <div className="space-y-3">
+              <ProfileRow label="Email" value={alumni.email} />
+              <ProfileRow label="Phone No." value={alumni.contact} />
+            </div>
+          </SubSection>
+        </ProfileCard>
+
+        {/* right: Job + Skills */}
+        <ProfileCard>
+          <SubSection title="Job">
+            <ProfileRow label="Current Job" value={alumni.currentJob} />
+          </SubSection>
+
+          <div className="h-[2px] bg-[#800000]" />
+
+          <SubSection title="Skills">
+            {alumni.skills && alumni.skills.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {alumni.skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="text-[12px] font-medium text-[#241B3A] bg-[#F0F2F5] px-3 py-1.5 rounded-full"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[13px] text-[#8B87A3]">No skills added yet.</p>
+            )}
+          </SubSection>
+        </ProfileCard>
       </div>
     </div>
   );

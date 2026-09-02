@@ -1,7 +1,7 @@
 'use client';
 
-import { Suspense, useState, useTransition } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState, useTransition } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { quicksand } from '@/lib/fonts';
 import { facultyMembers } from '@/lib/faculty-data';
 import AuthCard from '@/components/auth/AuthCard';
@@ -150,6 +150,7 @@ const emptyRegisterData: Record<TextFieldKey, string> = {
 };
 
 function LoginPageInner() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const asParam = searchParams.get('as');
   const initialMode: Mode =
@@ -168,6 +169,22 @@ function LoginPageInner() {
   const [step, setStep] = useState(0);
   const [registerData, setRegisterData] = useState<Record<TextFieldKey, string>>(emptyRegisterData);
   const [file, setFile] = useState<File | null>(null);
+
+  // Keep the URL in sync with mode only — every registration step shows
+  // the same /login?as=alumni-register URL, it does not change per step.
+  // router.replace() on the same route (/login) just swaps the search
+  // params — it does not remount the page or touch browser history, so
+  // the sliding transition and all in-progress form state are untouched.
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (mode === 'alumni-signin') {
+      params.set('as', 'alumni');
+    } else if (mode === 'alumni-register') {
+      params.set('as', 'alumni-register');
+    }
+    const query = params.toString();
+    router.replace(query ? `/login?${query}` : '/login', { scroll: false });
+  }, [mode, router]);
 
   const switchToStaffSignin = () => {
     setMode('staff');
@@ -402,7 +419,10 @@ function LoginPageInner() {
 
           <div className="mb-2" />
 
-          <SubmitButton onClick={handleSignin}>
+          <SubmitButton
+            onClick={handleSignin}
+            colorClassName="bg-[#800000] hover:bg-[#6b0000] shadow-[0_14px_28px_rgba(128,0,0,0.35)] hover:shadow-[0_18px_34px_rgba(128,0,0,0.45)] disabled:hover:shadow-[0_14px_28px_rgba(128,0,0,0.35)]"
+          >
             {isPending ? 'Signing in...' : 'Sign In'}
           </SubmitButton>
         </>

@@ -3,37 +3,54 @@
 import { useState } from 'react';
 import { navItems, settingsGroup, type NavKey } from './navItems';
 import { chevronDownIcon } from './icons';
+import { mockAlumni, CURRENT_ALUMNI_ID } from '@/lib/mock-alumni';
 
 interface SidebarProps {
   active: NavKey;
   onChange: (key: NavKey) => void;
-  userName?: string;
   onProfileClick?: () => void;
   onSetProfile?: () => void;
 }
 
+const avatarPlaceholderIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 20c0-4 3.5-6 8-6s8 2 8 6" />
+  </svg>
+);
+
 export default function Sidebar({
   active,
   onChange,
-  userName = 'Your Name',
   onProfileClick,
   onSetProfile,
 }: SidebarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
+  // Stand-in for "the logged-in alumni" until real alumni sessions are wired
+  // up (see getCurrentAlumni() in lib/auth.ts) — same approach used elsewhere.
+  const currentAlumni = mockAlumni.find((a) => a.id === CURRENT_ALUMNI_ID);
+
   return (
     <aside className="w-[280px] shrink-0 hidden lg:block sticky top-16 h-[calc(100vh-64px)] overflow-y-auto py-3 px-2">
 
-      {/* profile row */}
+      {/* profile row — links to View Profile, shows the real alumni's name/photo */}
       <button
         type="button"
         onClick={onProfileClick}
         className="w-full flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-[#F5F4FB] transition-colors text-left mb-1"
       >
         <div className="w-9 h-9 rounded-full bg-[#EAF4FB] overflow-hidden flex items-center justify-center shrink-0">
-          {/* e.g. <img src="/avatar.jpg" alt="" className="w-full h-full object-cover" /> */}
+          {currentAlumni?.photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={currentAlumni.photo} alt={currentAlumni.name} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-[#8B87A3]">{avatarPlaceholderIcon}</span>
+          )}
         </div>
-        <span className="text-[15px] font-semibold text-[#241B3A] truncate">{userName}</span>
+        <span className="text-[15px] font-semibold text-[#241B3A] truncate">
+          {currentAlumni?.name ?? 'Your Name'}
+        </span>
       </button>
 
       <div className="h-px bg-black/10 mx-2 my-2" />
